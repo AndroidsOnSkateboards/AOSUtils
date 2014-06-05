@@ -33,8 +33,12 @@ Easy HTTP calls, XML / JSON parsing
     int REQUEST_CODE_FACEBOOK_LOGIN = 2;
     SocialFacebook facebook = new SocialFacebook(String appId, String appSecret, int REQUEST_CODE_FACEBOOK_LOGIN);
 
-    // Where onSuccessfulTweetRunnable is a Runnable that will be called once the status is posted (can be null if you'd like)
-    facebook.post(String action, Map<String, String> properties, Activity activity, Runnable onSuccessfulPost)  
+    String action = "video.watches";
+    HashMap<String, String> properties = new HashMap<String, String>();
+    properties.put("video", "http://www.youtube.com/watch?v=" + youtubeVideoId);
+    properties.put("fb:explicitly_shared", "false");
+    // Where onSuccessfulPostRunnable is a Runnable that will be called once the status is posted (can be null if you'd like)
+    facebook.post(String action, Map<String, String> properties, Activity activity, Runnable onSuccessfulPostRunnable)  
 
     // You need to call this from your activity's onActivityResult() if you want to send out the status update once the user has logged in.
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
