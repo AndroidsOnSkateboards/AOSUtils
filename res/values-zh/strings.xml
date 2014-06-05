@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chinese -->
+<resources>
+    <string name="dialog_Loading">中..</string>
+	<string name="dialog_Searching">正在搜索中..</string>
+	<string name="dialog_Saving">保存..</string>
+	<string name="dialog_Posting">發帖..</string>
+    <string name="info_Posted">發布成功。</string>
+    <string name="error_Connection">無法連接到網絡！</string>
+    <string name="error_Posting">問題張貼。請稍後再試。</string>
+    <string name="error_Posting_DateTime">問題張貼。請確認您的日期和時間設置，然後再試一次。</string>
+    <string name="error_Unknown">未知錯誤</string>
+</resources>

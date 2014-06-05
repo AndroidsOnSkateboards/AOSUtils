@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- German -->
+<resources>
+    <string name="dialog_Loading">Verladung ..</string>
+	<string name="dialog_Searching">Forschend ..</string>
+	<string name="dialog_Saving">Speichern ..</string>
+    <string name="dialog_Posting">Abschicken ..</string>
+    <string name="info_Posted">Erfolgreich geschrieben.</string>
+    <string name="error_Connection">Kann keine Verbindung zum Internet aufbauen!</string>
+    <string name="error_Posting">Problem Posting. Bitte versuchen Sie es später erneut.</string>
+    <string name="error_Posting_DateTime">Problem Posting. Bitte überprüfen Sie Ihre Datums-und Zeiteinstellungen und versuchen Sie es erneut.</string>
+    <string name="error_Unknown">Unbekannter Fehler!</string>
+</resources>

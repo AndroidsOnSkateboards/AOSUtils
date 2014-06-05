@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spanish -->
+<resources>
+    <string name="dialog_Loading">Cargando ..</string>
+    <string name="dialog_Searching">búsqueda...</string>
+    <string name="dialog_Saving">Ahorro ..</string>
+    <string name="dialog_Posting">Publicar ..</string>
+    <string name="info_Posted">Publicado con éxito.</string>
+    <string name="error_Connection">No se puede conectar a Internet!</string>
+    <string name="error_Posting">Problema publicación. Por favor inténtelo de nuevo más tarde.</string>
+    <string name="error_Posting_DateTime">Problema publicación. Por favor, compruebe la fecha y la hora y vuelva a intentarlo.</string>
+    <string name="error_Unknown">Error desconocido!</string>
+</resources>
