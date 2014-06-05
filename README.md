@@ -22,6 +22,9 @@ Easy HTTP calls, XML / JSON parsing
         twitter.onLoginSuccessful(data, activity, new OnSuccessfulPostRunnable());
       }
     }
+    
+    // And then if you want to log out
+    SocialCommon.logout(Context context);
 
 
 ###### Facebook usage:
@@ -39,6 +42,9 @@ Easy HTTP calls, XML / JSON parsing
         onLoginSuccessful(Intent data, Activity activity, Runnable onSuccessfulPostRunnable) {
       }  
     }
+    
+    // And then if you want to log out
+    SocialCommon.logout(Context context);
 
 
 
