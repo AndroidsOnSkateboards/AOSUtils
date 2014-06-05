@@ -201,8 +201,10 @@ public class SocialTwitter {
 		protected void onPostSuccess(JSONObject jsonObject) {
 			pendingTweet = null;
 			
-			onSuccessfulTweetRunnable.run();
-			onSuccessfulTweetRunnable = null;
+			if (onSuccessfulTweetRunnable != null) {
+				onSuccessfulTweetRunnable.run();
+				onSuccessfulTweetRunnable = null;
+			}
 		}
 
 		@Override

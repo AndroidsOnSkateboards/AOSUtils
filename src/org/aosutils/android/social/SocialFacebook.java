@@ -76,8 +76,10 @@ public class SocialFacebook {
 						post(pendingPost, getActivity());
 						pendingPost = null;
 						
-						onSuccessfulPost.run();
-						onSuccessfulPost = null;
+						if (onSuccessfulPost != null) {
+							onSuccessfulPost.run();
+							onSuccessfulPost = null;
+						}
 					} catch (HTTPUnauthorizedException e) {
 						login(getActivity());
 						e.printStackTrace();
