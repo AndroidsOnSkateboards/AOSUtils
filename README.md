@@ -16,7 +16,7 @@ Easy HTTP calls, XML / JSON parsing
     // Where onSuccessfulTweetRunnable is a Runnable that will be called once the tweet has gone out (can be null if you'd like)
     twitter.tweet(String message, Activity activity, Runnable onSuccessfulTweetRunnable);
     
-    // You need to call this from your activity's onActivityResult() if you want to send out the pending tweet once the user has logged in.`
+    // You need to call this from your activity's onActivityResult() if you want to send out the pending tweet once the user is logged in.
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
       if (requestCode == REQUEST_CODE_TWITTER_LOGIN && resultCode == RESULT_OK) {
         twitter.onLoginSuccessful(data, activity, new OnSuccessfulPostRunnable());
@@ -40,7 +40,7 @@ Easy HTTP calls, XML / JSON parsing
     // Where onSuccessfulPostRunnable is a Runnable that will be called once the status is posted (can be null if you'd like)
     facebook.post(String action, Map<String, String> properties, Activity activity, Runnable onSuccessfulPostRunnable)  
 
-    // You need to call this from your activity's onActivityResult() if you want to send out the status update once the user has logged in.
+    // You need to call this from your activity's onActivityResult() if you want to send out the status update once the user is logged in.
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {  
       if (requestCode == REQUEST_CODE_FACEBOOK_LOGIN && resultCode == RESULT_OK) {  
         onLoginSuccessful(Intent data, Activity activity, Runnable onSuccessfulPostRunnable) {
