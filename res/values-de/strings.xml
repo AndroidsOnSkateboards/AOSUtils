@@ -3,6 +3,7 @@
 <resources>
     <string name="dialog_Loading">Verladung ..</string>
 	<string name="dialog_Searching">Forschend ..</string>
+	<string name="dialog_Opening">Öffnungs ..</string>
 	<string name="dialog_Saving">Speichern ..</string>
     <string name="dialog_Posting">Abschicken ..</string>
     <string name="info_Posted">Erfolgreich geschrieben.</string>

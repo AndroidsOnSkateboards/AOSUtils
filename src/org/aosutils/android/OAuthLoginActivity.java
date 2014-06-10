@@ -39,7 +39,7 @@ public class OAuthLoginActivity extends Activity {
         ProgressBar progressBar = new ProgressBar(this);
         loadingView.addView(progressBar);
         TextView textView = new TextView(this);
-        textView.setText(R.string.aosutils_dialog_Loading);
+        textView.setText(R.string.dialog_Loading);
         textView.setGravity(Gravity.CENTER);
         textView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
         loadingView.addView(textView);

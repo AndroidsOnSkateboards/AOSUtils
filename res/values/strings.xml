@@ -3,6 +3,7 @@
 <resources>
     <string name="dialog_Loading">Loading..</string>
     <string name="dialog_Searching">Searching..</string>
+    <string name="dialog_Opening">Opening..</string>
     <string name="dialog_Saving">Saving..</string>
     <string name="dialog_Posting">Posting..</string>
     <string name="info_Posted">Successfully posted.</string>

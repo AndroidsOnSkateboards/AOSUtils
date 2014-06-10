@@ -4,6 +4,7 @@ AOSUtilsAndroid
 Includes:
 
 Facebook & Twitter SDKs  
+YouTube SDK  
 Easy HTTP calls, XML / JSON parsing
 
 

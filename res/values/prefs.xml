@@ -1,6 +1,4 @@
-<resources>
-	<string name="aosutils_dialog_Loading">Loading..</string>
-    
+<resources>    
     <string translatable="false" name="aosutils_pref_CookiesStored">AOSUtils_CookiesStored</string>
     <string translatable="false" name="aosutils_pref_FacebookApiToken">AOSUtils_FacebookApiToken</string>
     <string translatable="false" name="aosutils_pref_TwitterApiToken">AOSUtils_TwitterApiToken</string>

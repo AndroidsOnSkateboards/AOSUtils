@@ -3,6 +3,7 @@
 <resources>
     <string name="dialog_Loading">中..</string>
 	<string name="dialog_Searching">正在搜索中..</string>
+	<string name="dialog_Opening">開..</string>
 	<string name="dialog_Saving">保存..</string>
 	<string name="dialog_Posting">發帖..</string>
     <string name="info_Posted">發布成功。</string>
