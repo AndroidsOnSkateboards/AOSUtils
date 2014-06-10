@@ -13,18 +13,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+
+import android.backported.xml.DOMSource;
+import android.backported.xml.StreamResult;
+import android.backported.xml.Transformer;
+import android.backported.xml.TransformerFactory;
 
 public class XmlUtils {
 	public static Document newDocument() throws ParserConfigurationException {
@@ -34,7 +36,7 @@ public class XmlUtils {
 	}
 	public static void addTextElement(String name, String value, Element parent) {
 		Element element = parent.getOwnerDocument().createElement(name);
-		element.setTextContent(value);
+		element.appendChild(parent.getOwnerDocument().createTextNode(value));
 		parent.appendChild(element);
 	}
 	public static String getTextElementValue(String elementName, Element parentElement, boolean showEmptyAsNull) {
@@ -42,7 +44,7 @@ public class XmlUtils {
 		
 		if (childNodesWithTagName.size() > 0) {
 			Node childNode = childNodesWithTagName.get(0);
-			String text = childNode.getTextContent().trim();
+			String text = childNode.getFirstChild().getNodeValue().trim();
 			
 			return text.equals("") && showEmptyAsNull ? null : text;
 		}
@@ -93,11 +95,10 @@ public class XmlUtils {
 	}
 	
 	public static String toString(Document xml) throws IOException, TransformerException {
-	    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 	    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
 	    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-	    // Indent
 	    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 	    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 	    
@@ -105,5 +106,63 @@ public class XmlUtils {
 	    transformer.transform(new DOMSource(xml), new StreamResult(stringWriter));
 	    stringWriter.flush();
 	    return stringWriter.toString();
+	}
+	
+	public static String myToString(Document xml) {
+		String output = "";
+		
+		ArrayList<String> lines = parseChild(xml.getDocumentElement());
+		for (int i=0; i<lines.size(); i++) {
+			output += lines.get(i);
+			if (i+1<lines.size()) {
+				output += "\n";
+			}
+		}
+		
+		return output;
+	}
+	
+	private static ArrayList<String> parseChild(Element element) {
+		ArrayList<String> attributeLines = processAttributes(element);
+		NodeList childNodes = element.getChildNodes();
+		
+		ArrayList<String> output = new ArrayList<String>();
+		
+		
+		if (attributeLines.size() == 0) {
+			output.add("<" + element.getTagName() + (childNodes.getLength() == 0 ? "/>" : ">"));
+		}
+		else {
+			output.add("<" + element.getTagName());
+			
+			for (String attributeLine : attributeLines) {
+				output.add("\t" + attributeLine);
+			}
+			
+			output.add(childNodes.getLength() == 0 ? "/>" : "\t>");
+		}
+		
+		if (childNodes.getLength() > 0) {
+			for (int i=0; i<childNodes.getLength(); i++) {
+				Element child = (Element) childNodes.item(i);
+				for (String childNodeLine : parseChild(child)) {
+					output.add("\t" + childNodeLine);
+				}
+			}
+			output.add("</" + element.getTagName() + ">");
+		}
+		
+		return output;
+	}
+	
+	private static ArrayList<String> processAttributes(Element element) {
+		NamedNodeMap attributes = element.getAttributes();
+		
+		ArrayList<String> output = new ArrayList<String>();
+		for (int i=0; i<attributes.getLength(); i++) {
+			Node attribute = attributes.item(i);
+			output.add(String.format("%s=\"%s\"",attribute.getNodeName(), attribute.getNodeValue()));
+		}
+		return output;
 	}
 }

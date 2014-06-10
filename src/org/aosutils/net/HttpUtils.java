@@ -30,18 +30,14 @@ public class HttpUtils {
 	public static String get(String uri, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
 		return request(uri, headers, false, null, httpTimeout, null);
 	}
-	public static String get(String uri, Map<String, String> headers, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, false, null, httpTimeout, proxy);
-	}
-	
 	public static String post(String uri, Map<String, String> headers, String postData, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
 		return request(uri, headers, true, postData, httpTimeout, null);
 	}
-	public static String post(String uri, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, true, postData, httpTimeout, proxy);
-	}
 	
-	private static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
+	public static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
+		return getString(requestStream(uri, headers, post, postData, httpTimeout, proxy));
+	}
+	public static InputStream requestStream(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
 		URL url = new URL(uri);
 		URLConnection urlConnection = proxy == null ? url.openConnection() : url.openConnection(proxy);
 		
@@ -78,7 +74,8 @@ public class HttpUtils {
 			if ("gzip".equals(urlConnection.getContentEncoding())) {
 				resultStream = new GZIPInputStream(resultStream);
 			}
-			return getString(resultStream);
+			
+			return resultStream;
 		}
 		catch (IOException e) {
 			if (urlConnection instanceof HttpURLConnection) {
@@ -98,16 +95,16 @@ public class HttpUtils {
 	public static String getString(InputStream inputStream) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 		
-		String output = "";
+		StringBuilder stringBuilder = new StringBuilder();
 		String line = bufferedReader.readLine();
 		while (line != null) {
-			output += line + "\n";
+			stringBuilder.append(line + "\n");
 			line = bufferedReader.readLine();
 		}
 		
 		bufferedReader.close();
 		
-		return output;
+		return stringBuilder.toString();
 	}
 	
 	public static void sendToOutputStream(OutputStream outputStream, String output) throws IOException {
