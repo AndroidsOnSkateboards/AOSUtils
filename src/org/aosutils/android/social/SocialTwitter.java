@@ -87,7 +87,7 @@ public class SocialTwitter {
 		
 		@Override
 		protected void onPostSuccess(Map<String, String> response) {
-			//Log.v("SS", "token_secret: " + response.get("oauth_token_secret"));
+			//String tokenSecret = response.get("oauth_token_secret");
 			
 			if (! "true".equals(response.get("oauth_callback_confirmed"))) {
 				AOSUtilsCommon.alert(null, getActivity().getResources().getString(R.string.error_Unknown), getActivity());

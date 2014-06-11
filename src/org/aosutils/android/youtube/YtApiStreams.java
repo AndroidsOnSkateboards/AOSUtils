@@ -5,15 +5,19 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
+import org.aosutils.android.AOSUtilsCommon;
+import org.aosutils.android.R;
 import org.aosutils.net.HttpUtils;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.wifi.WifiManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
-public class YtApiClientStreams {
+public class YtApiStreams {
 	/*
 	 * Known formats:
 	 * 17 - Video+Audio - 144p
@@ -44,7 +48,7 @@ public class YtApiClientStreams {
 	
 	public static String findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
 		String[] recommendedFormats = getRecommendedFormats(context, streamType);
-		return findRecommendedUrl(videoId, recommendedFormats);
+		return findRecommendedUrl(videoId, recommendedFormats, context);
 	}
 	
 	// Returns recommended formats, ordered from most recommended to least recommended
@@ -104,10 +108,10 @@ public class YtApiClientStreams {
 		}
 	}
 	
-	private static String findRecommendedUrl(String videoId, String[] recommendedFormats) throws FileNotFoundException, MalformedURLException, IOException {
-		HashMap<String, String> urls = getFormatsFromDesktopSite(videoId);
+	private static String findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws FileNotFoundException, MalformedURLException, IOException {
+		HashMap<String, String> urls = getFormatsFromDesktopSite(videoId, context);
 		if (urls.size() == 0) {
-			urls = getFormatsFromVideoInformation(videoId);
+			urls = getFormatsFromVideoInformation(videoId, context);
 		}
 		
 		for (String recommendedFormat : recommendedFormats) {
@@ -126,12 +130,38 @@ public class YtApiClientStreams {
 		return null;
 	}
 	
-	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
+	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
 		String uri = "http://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
-		String page = HttpUtils.get(uri, headers, YtApiConstants.HttpTimeout);
+		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
+		String page = HttpUtils.get(uri, headers, _YtApiConstants.HttpTimeout);
 		
+		// Identify signature algorithm version
+		String playerVersion = YtApiSignature.getCurrentVersion(page);
+		if (playerVersion != null) {
+			SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
+			
+			String prefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
+			String prefValue = preferences.getString(prefName, null);
+			
+			if (prefValue == null || !(TextUtils.split(prefValue, Pattern.quote("||"))[0].equals(playerVersion))) {
+				// Algorithm needs update
+				try {
+					String algorithm = YtApiSignature.requestCurrentAlgorithm(page);
+					prefValue = playerVersion + "||" + algorithm;
+					
+					preferences.edit().putString(prefName, prefValue).commit();
+				}
+				catch (IOException e) {
+					// Don't stop parsing formats if this fails
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		String algorithm = loadAlgorithmFromPreferences(context);
+		
+		// Parse formats
 		HashMap<String, String> formats = new HashMap<String, String>();
 		
 		String[] mapNames = { "url_encoded_fmt_stream_map", "adaptive_fmts" };
@@ -144,17 +174,20 @@ public class YtApiClientStreams {
 				int end = page.indexOf("\"", begin);
 				
 				String urlEncodedFmtStreamMap = page.substring(begin, end).replace("\\u0026", "&");
-				formats.putAll(parseUrls(urlEncodedFmtStreamMap));
+				formats.putAll(parseUrls(urlEncodedFmtStreamMap, algorithm));
 			}
 		}
 		
 		return formats;
 	}
 	
-	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
+	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
 		String uri = "http://www.youtube.com/get_video_info?&video_id=" + videoId;
-		String page = HttpUtils.get(uri, null, YtApiConstants.HttpTimeout);
+		String page = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		
+		String algorithm = loadAlgorithmFromPreferences(context);
+		
+		// Parse formats
 		HashMap<String, String> formats = new HashMap<String, String>();
 		
 		String[] mapNames = { "url_encoded_fmt_stream_map", "adaptive_fmts" };
@@ -169,15 +202,23 @@ public class YtApiClientStreams {
 					end = page.length();
 				}
 				
-				String urlEncodedFmtStreamMap = URLDecoder.decode(page.substring(begin, end), YtApiConstants.CharacterEncoding);
-				formats.putAll(parseUrls(urlEncodedFmtStreamMap));
+				String urlEncodedFmtStreamMap = URLDecoder.decode(page.substring(begin, end), _YtApiConstants.CharacterEncoding);
+				formats.putAll(parseUrls(urlEncodedFmtStreamMap, algorithm));
 			}
 		}
 		
 		return formats;
 	}
 	
-	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap) throws FileNotFoundException, MalformedURLException, IOException {
+	private static String loadAlgorithmFromPreferences(Context context) {
+		SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
+		String algorithmPrefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
+		String algorithmPrefValue = preferences.getString(algorithmPrefName, null);
+		String algorithm = algorithmPrefValue == null ? null : TextUtils.split(algorithmPrefValue, Pattern.quote("||"))[1];
+		return algorithm;
+	}
+	
+	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {		
 		HashMap<String, String> formats = new HashMap<String, String>();
 			
 		String[] urls = TextUtils.split(urlEncodedFmtStreamMap, ",");
@@ -189,16 +230,28 @@ public class YtApiClientStreams {
 			for (String set : params) {
 				String[] setParts = TextUtils.split(set, "=");
 				String key = setParts[0].replace("u0026", "");
-				String value = URLDecoder.decode(setParts[1], "UTF-8");
+				String value = URLDecoder.decode(setParts[1], _YtApiConstants.CharacterEncoding);
 				
 				paramMap.put(key, value);
-				
-				//Log.v("SSA", key + ":" + value);
 			}
 			
-			//Log.v("SSA", paramMap.get("itag") + "," + paramMap.get("quality") + ": ");
-			//Log.v("SSA", paramMap.get("url"));
-			formats.put(paramMap.get("itag"), paramMap.get("url"));
+			String itag = paramMap.get("itag");
+			String feedUrl = paramMap.get("url");
+			
+			if (paramMap.containsKey("s")) { // Secure link, decode
+				try {
+					String signature = paramMap.get("s");
+					
+					if (algorithm != null) {
+						feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
+					}
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			formats.put(itag, feedUrl);
 		}
 		
 		return formats;

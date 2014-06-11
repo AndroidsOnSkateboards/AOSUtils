@@ -118,7 +118,7 @@ public class YtApiClientV3 {
 		}
 		
 		String uri = uriBuilder.build().toString();
-		String output = HttpUtils.get(uri, null, YtApiConstants.HttpTimeout);
+		String output = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		
 		
 		JSONObject jsonObject = new JSONObject(output);
@@ -152,7 +152,7 @@ public class YtApiClientV3 {
 		}
 		
 		String uri = uriBuilder.build().toString();
-		String output = HttpUtils.get(uri, null, YtApiConstants.HttpTimeout);
+		String output = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		
 		JSONObject jsonObject = new JSONObject(output);
 		
@@ -187,7 +187,7 @@ public class YtApiClientV3 {
 				.appendQueryParameter("part", "id,snippet")
 				.appendQueryParameter("id", TextUtils.join(",", playlistIds)).build().toString();
 		
-		String output = HttpUtils.get(uri, null, YtApiConstants.HttpTimeout);
+		String output = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		JSONObject jsonObject = new JSONObject(output);
 		
 		JSONArray items = jsonObject.getJSONArray("items");
@@ -220,7 +220,7 @@ public class YtApiClientV3 {
 				.appendQueryParameter("part", "id,snippet,contentDetails")
 				.appendQueryParameter("id", TextUtils.join(",", videoIds)).build().toString();
 		
-		String output = HttpUtils.get(uri, null, YtApiConstants.HttpTimeout);
+		String output = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		JSONObject jsonObject = new JSONObject(output);
 		
 		JSONArray items = jsonObject.getJSONArray("items");

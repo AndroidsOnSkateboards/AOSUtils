@@ -29,11 +29,11 @@ public class YtApiClientV2 {
 	 */
 	
 	public static ArrayList<YtPlaylist> searchYtPlaylists(String query, int from, int maxResults) throws IOException, SAXException, ParserConfigurationException {
-		String url = "http://gdata.youtube.com/feeds/api/playlists/snippets?v=2&max-results=" + maxResults + "&start-index=" + from + "&q=" + URLEncoder.encode(query, YtApiConstants.CharacterEncoding);
+		String url = "http://gdata.youtube.com/feeds/api/playlists/snippets?v=2&max-results=" + maxResults + "&start-index=" + from + "&q=" + URLEncoder.encode(query, _YtApiConstants.CharacterEncoding);
 		return parsePlaylists(getEntries(url));
 	}
 	public static ArrayList<YtVideo> searchYtVideos(String query, int from, int maxResults) throws IOException, ParserConfigurationException, SAXException  {
-		String url = "http://gdata.youtube.com/feeds/api/videos?v=2&orderby=relevance&max-results=" + maxResults + "&start-index=" + from + "&q=" + URLEncoder.encode(query, YtApiConstants.CharacterEncoding); // + "&format=6";
+		String url = "http://gdata.youtube.com/feeds/api/videos?v=2&orderby=relevance&max-results=" + maxResults + "&start-index=" + from + "&q=" + URLEncoder.encode(query, _YtApiConstants.CharacterEncoding); // + "&format=6";
 		
 		NodeList entries = getEntries(url);
 		return parseVideos(entries);
@@ -46,7 +46,7 @@ public class YtApiClientV2 {
 		String youTubeDescription = null;
 		try {
 			String url = "http://gdata.youtube.com/feeds/api/videos/" + ytVideoId + "?v=2";
-			Document doc = XmlUtils.parseXml(HttpUtils.get(url, null, YtApiConstants.HttpTimeout));
+			Document doc = XmlUtils.parseXml(HttpUtils.get(url, null, _YtApiConstants.HttpTimeout));
 			Element entry = (Element) doc.getElementsByTagName("entry").item(0);
 			Element mediaGroup = (Element) entry.getElementsByTagName("media:group").item(0);
 			Node mediaDescription = mediaGroup.getElementsByTagName("media:description").item(0);
@@ -59,7 +59,7 @@ public class YtApiClientV2 {
 	}
 	
 	private static NodeList getEntries(String url) throws IOException, SAXException, ParserConfigurationException {
-		String page = HttpUtils.get(url, null, YtApiConstants.HttpTimeout);
+		String page = HttpUtils.get(url, null, _YtApiConstants.HttpTimeout);
 		Document doc = XmlUtils.parseXml(page);
 		
 		NodeList feeds = doc.getElementsByTagName("feed");
