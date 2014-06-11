@@ -5,7 +5,7 @@ Includes:
 
 Facebook & Twitter SDKs  
 YouTube SDK  
-Easy HTTP calls, XML / JSON parsing
+Easy HTTP calls, XML / JSON parsing  
 XML support for Android 2.1 and lower
 
 
