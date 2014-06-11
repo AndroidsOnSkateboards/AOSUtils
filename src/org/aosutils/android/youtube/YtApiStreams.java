@@ -20,8 +20,8 @@ import android.text.TextUtils;
 public class YtApiStreams {
 	/*
 	 * Known formats:
-	 * 17 - Video+Audio - 144p
-	 * 18 - Video+Audio - 360p
+	 * 17 - Video+Audio - 144p   - ~3MB average
+	 * 18 - Video+Audio - 360p   - ~12MB average
 	 * 22 - Video+Audio - 720p
 	 * 37 - Video+Audio - 1080p
 	 * 
@@ -32,7 +32,7 @@ public class YtApiStreams {
 	 * 137 - Video only - 1080p
 	 * 
 	 * 139 - Audio only - Low
-	 * 140 - Audio only - Medium
+	 * 140 - Audio only - Medium - ~3MB average
 	 * 141 - Audio only - High
 	 * 
 	 * Found lots of info at: http://users.ohiohills.com/fmacall/YTCRACK.TXT
@@ -40,7 +40,7 @@ public class YtApiStreams {
 	 */
 	
 	public enum StreamType {
-		VIDEO_AND_AUDIO, AUDIO_ONLY;
+		VIDEO_AND_AUDIO, AUDIO_ONLY, AUDIO_ONLY_LOW_QUALITY;
 	}
 	private enum ConnectionType {
 		SLOW, MEDIUM, FAST;
@@ -53,17 +53,33 @@ public class YtApiStreams {
 	
 	// Returns recommended formats, ordered from most recommended to least recommended
 	private static String[] getRecommendedFormats(Context context, StreamType streamType) {
+		ConnectionType connectionType = getConnectionType(context);
+		
 		if (streamType == StreamType.AUDIO_ONLY) {
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-				// Device supports Audio-only stream; use "medium" quality audio stream (only one ever tested)
-				return new String[] { "140", "18", "17" };
+				// Device supports Audio-only stream; use "medium" quality audio stream (only one ever found & tested)
+				return connectionType == ConnectionType.FAST || connectionType == ConnectionType.MEDIUM ? 
+						new String[] { "140", "18", "17" } :
+						new String[] { "140", "17" };
 			}
 			else {
-				return new String[] { "18", "17" };
+				// Only video streams supported
+				return connectionType == ConnectionType.FAST || connectionType == ConnectionType.MEDIUM ? 
+						new String[] { "18", "17" } :
+						new String[] { "17" };
+			}
+		}
+		else if (streamType == StreamType.AUDIO_ONLY_LOW_QUALITY) {
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+				// Device supports Audio-only stream; use "medium" quality audio stream (only one ever tested)
+				return new String[] { "140", "17" };
+			}
+			else {
+				// Only video streams supported
+				return new String[] { "17" };
 			}
 		}
 		else {
-			ConnectionType connectionType = getConnectionType(context);
 			if (connectionType == ConnectionType.FAST) {
 				return new String[] { "22", "18", "17" };
 			}

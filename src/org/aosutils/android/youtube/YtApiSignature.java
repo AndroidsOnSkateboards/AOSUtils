@@ -47,10 +47,10 @@ public class YtApiSignature {
 	
 	/**
 	 * Same algorithm format as used in youtubedown:
-	 *  
+	 * 
 	 * r  = reverse the string;
 	 * sN = slice from character N to the end;
-     * wN = swap 0th and Nth character.
+	 * wN = swap 0th and Nth character.
 	 */
 	public static String decode(String url, String signature, String algorithm) {		
 		for (String procedure : TextUtils.split(algorithm, " ")) {
