@@ -6,8 +6,10 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.Map;
 
-import android.org.json.JSONException;
-import android.org.json.JSONObject;
+import org.aosutils.IoUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class JsonUtils {
 	public static String httpPost(String uri, Map<String, String> headers, JSONObject jsonObject, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
@@ -15,7 +17,7 @@ public class JsonUtils {
 	}
 	
 	public static JSONObject parseJson(InputStream inputStream) throws IOException, JSONException {
-		return parseJson(HttpUtils.getString(inputStream));
+		return parseJson(IoUtils.getString(inputStream));
 	}
 	public static JSONObject parseJson(String input) throws JSONException {
 		return new JSONObject(input);

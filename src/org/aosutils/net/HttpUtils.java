@@ -1,11 +1,9 @@
 package org.aosutils.net;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -17,6 +15,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import org.aosutils.IoUtils;
 
 public class HttpUtils {
 	public static class HTTPUnauthorizedException extends IOException {
@@ -35,7 +35,8 @@ public class HttpUtils {
 	}
 	
 	public static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
-		return getString(requestStream(uri, headers, post, postData, httpTimeout, proxy));
+		InputStream inputStream = requestStream(uri, headers, post, postData, httpTimeout, proxy);
+		return IoUtils.getString(inputStream);
 	}
 	public static InputStream requestStream(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
 		URL url = new URL(uri);
@@ -90,21 +91,6 @@ public class HttpUtils {
 			
 			throw e;
 		}
-	}
-	
-	public static String getString(InputStream inputStream) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-		
-		StringBuilder stringBuilder = new StringBuilder();
-		String line = bufferedReader.readLine();
-		while (line != null) {
-			stringBuilder.append(line + "\n");
-			line = bufferedReader.readLine();
-		}
-		
-		bufferedReader.close();
-		
-		return stringBuilder.toString();
 	}
 	
 	public static void sendToOutputStream(OutputStream outputStream, String output) throws IOException {

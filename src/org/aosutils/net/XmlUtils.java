@@ -15,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 
+import org.aosutils.IoUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -72,7 +73,7 @@ public class XmlUtils {
 	}
 	
 	public static Document parseXml(InputStream inputStream) throws ParserConfigurationException, SAXException, IOException {
-		return parseXml(HttpUtils.getString(inputStream));
+		return parseXml(IoUtils.getString(inputStream));
 	}
 	public static Document parseXml(String input) throws ParserConfigurationException, SAXException, IOException {
 		try {
