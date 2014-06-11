@@ -2,6 +2,7 @@ package org.aosutils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 public class StringUtils {
@@ -38,6 +39,22 @@ public class StringUtils {
 		}
 		
 		return parts;
+	}
+	
+	public static HashMap<String, String> splitAndMap(String inputString, String splitDelimiter, String mapDelimiter) {
+		HashMap<String, String> map = new HashMap<String, String>();
+		
+		for (String part : split(inputString, splitDelimiter)) {
+			String key = part.substring(0, part.indexOf(mapDelimiter));
+			String value = part.substring(part.indexOf(mapDelimiter)+1);
+			map.put(key, value);
+		}
+		
+		return map;
+	}
+	
+	public static HashMap<String, String> parseUrlArgs(String url) {
+		return splitAndMap(url.substring(url.indexOf("?")+1), "&", "=");
 	}
 	
 	public static String padLeft(String s, int spaces) {
