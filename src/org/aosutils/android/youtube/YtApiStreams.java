@@ -152,30 +152,8 @@ public class YtApiStreams {
 		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
 		String page = HttpUtils.get(uri, headers, _YtApiConstants.HttpTimeout);
 		
-		// Identify signature algorithm version
-		String playerVersion = YtApiSignature.getCurrentVersion(page);
-		if (playerVersion != null) {
-			SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
-			
-			String prefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
-			String prefValue = preferences.getString(prefName, null);
-			
-			if (prefValue == null || !(TextUtils.split(prefValue, Pattern.quote("||"))[0].equals(playerVersion))) {
-				// Algorithm needs update
-				try {
-					String algorithm = YtApiSignature.requestCurrentAlgorithm(page);
-					prefValue = playerVersion + "||" + algorithm;
-					
-					preferences.edit().putString(prefName, prefValue).commit();
-				}
-				catch (IOException e) {
-					// Don't stop parsing formats if this fails
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		String algorithm = loadAlgorithmFromPreferences(context);
+		// This page contains algorithm info, so check it against the current used algorithm and update if necessary
+		String algorithm = getOrUpdateAlgorithm(page, context);
 		
 		// Parse formats
 		HashMap<String, String> formats = new HashMap<String, String>();
@@ -201,7 +179,8 @@ public class YtApiStreams {
 		String uri = "http://www.youtube.com/get_video_info?&video_id=" + videoId;
 		String page = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
 		
-		String algorithm = loadAlgorithmFromPreferences(context);
+		// This page doesn't contain algorithm info, so load it from preferences
+		String algorithm = AlgorithmPreference.get(context).algorithm;
 		
 		// Parse formats
 		HashMap<String, String> formats = new HashMap<String, String>();
@@ -226,12 +205,63 @@ public class YtApiStreams {
 		return formats;
 	}
 	
-	private static String loadAlgorithmFromPreferences(Context context) {
-		SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
-		String algorithmPrefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
-		String algorithmPrefValue = preferences.getString(algorithmPrefName, null);
-		String algorithm = algorithmPrefValue == null ? null : TextUtils.split(algorithmPrefValue, Pattern.quote("||"))[1];
+	private static String getOrUpdateAlgorithm(String youtubePageSource, Context context) {
+		String algorithm = null;
+		
+		// Identify signature algorithm version
+		String playerVersion = YtApiSignature.getCurrentVersion(youtubePageSource);
+		
+		if (playerVersion != null) {
+			AlgorithmPreference algorithmPreference = AlgorithmPreference.get(context);
+			
+			if (algorithmPreference != null && algorithmPreference.version.equals(playerVersion)) {
+				// Algorithm up to date
+				algorithm = algorithmPreference.algorithm;
+			}
+			else {
+				// Algorithm needs update
+				try {
+					algorithm = YtApiSignature.requestCurrentAlgorithm(youtubePageSource);
+					AlgorithmPreference.set(playerVersion, algorithm, context);
+				}
+				catch (IOException e) {
+					
+				}
+			}
+		}
+		
 		return algorithm;
+	}
+	
+	private static class AlgorithmPreference {
+		String version;
+		String algorithm;
+		
+		private static AlgorithmPreference get(Context context) {
+			SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
+			String algorithmPrefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
+			String algorithmPrefValue = preferences.getString(algorithmPrefName, null);
+			
+			if (algorithmPrefValue == null) {
+				return null;
+			}
+			else {
+				String[] prefValueParts = TextUtils.split(algorithmPrefValue, Pattern.quote("||"));
+						
+				AlgorithmPreference algorithmPreference = new AlgorithmPreference();
+				algorithmPreference.version = prefValueParts[0];
+				algorithmPreference.algorithm = prefValueParts[1];
+				return algorithmPreference;
+			}
+		}
+		
+		private static void set(String version, String algorithm, Context context) {
+			SharedPreferences preferences = AOSUtilsCommon.getDefaultSharedPreferences(context);
+			String algorithmPrefName = context.getResources().getString(R.string.aosutils_pref_YoutubeSignatureAlgorithm);
+			
+			String prefValue = version + "||" + algorithm;
+			preferences.edit().putString(algorithmPrefName, prefValue).commit();
+		}
 	}
 	
 	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {		
@@ -255,19 +285,18 @@ public class YtApiStreams {
 			String feedUrl = paramMap.get("url");
 			
 			if (paramMap.containsKey("s")) { // Secure link, decode
-				try {
-					String signature = paramMap.get("s");
+				String signature = paramMap.get("s");
+				
+				if (algorithm != null) {
+					feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
 					
-					if (algorithm != null) {
-						feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
-					}
-				}
-				catch (Exception e) {
-					e.printStackTrace();
+					// Only store the format if the signature has been successfully decoded
+					formats.put(itag, feedUrl);
 				}
 			}
-			
-			formats.put(itag, feedUrl);
+			else {
+				formats.put(itag, feedUrl);
+			}
 		}
 		
 		return formats;
