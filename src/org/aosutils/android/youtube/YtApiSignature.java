@@ -52,7 +52,7 @@ public class YtApiSignature {
 	 * sN = slice from character N to the end;
 	 * wN = swap 0th and Nth character.
 	 */
-	public static String decode(String url, String signature, String algorithm) {		
+	public static String decode(String url, String signature, String algorithm) {
 		for (String procedure : TextUtils.split(algorithm, " ")) {
 			String procedureType = procedure.substring(0, 1);
 			if (procedureType.equals("r")) { // reverse the string
@@ -60,7 +60,7 @@ public class YtApiSignature {
 			}
 			else if (procedureType.equals("s")) { // slice from character N to the end
 				int position = Integer.parseInt(procedure.substring(1));
-				signature = signature.substring(0, position);
+				signature = signature.substring(position);
 			}
 			else if (procedureType.equals("w")) { // swap 0th and Nth character
 				int position = Integer.parseInt(procedure.substring(1));
@@ -137,19 +137,19 @@ public class YtApiSignature {
 			 */
 			
 			// Split
-			body = replaceAll(body, "(.+)=(.+?)\\.split\\(\"\"\\)", new int[] { }, "");
+			body = replaceAll(body, "[^;]+=[^;]+\\.split\\(\"\"\\)[^;]*", new int[] { }, "");
 			
 			// Reverse
-			body = replaceAll(body, "[^;]=(.+?)\\.reverse\\(\\)", new int[] { }, "r");
+			body = replaceAll(body, "[^;]+=[^;]+\\.reverse\\(\\)[^;]*", new int[] { }, "r");
 			
 			// Swap
-			body = replaceAll(body, "[^;]=(.+?)\\((.+?),(.+?)\\)", new int[] { 3 }, "w%s");
+			body = replaceAll(body, "[^;]+=[^;]+\\([^;]+,(.+?)\\)[^;]*", new int[] { 1 }, "w%s");
 			
 			// Slice
-			body = replaceAll(body, "[^;]=(.+?)\\.slice\\((.+?)\\)", new int[] { 2 }, "s%s");
+			body = replaceAll(body, "[^;]+=[^;]+\\.slice\\((.*?)\\)[^;]*", new int[] { 1 }, "s%s");
 			
 			// Join
-			body = replaceAll(body, "return (.+?)\\.join\\(\"\"\\)", new int[] { }, "");
+			body = replaceAll(body, "[^;]*return [^;]+\\.join\\(\"\"\\)", new int[] { }, "");
 		}
 		
 		body = body.replace(";", " ").trim();
