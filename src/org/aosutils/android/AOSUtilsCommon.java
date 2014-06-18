@@ -1,14 +1,19 @@
 package org.aosutils.android;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.AlertDialog.Builder;
+import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.preference.PreferenceManager;
+import android.telephony.TelephonyManager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -38,6 +43,11 @@ public class AOSUtilsCommon {
 	
 	public static boolean supportsCustomNotification() {
 		return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB;
+	}
+	
+	public static boolean isOnWifi(Context context) {
+		WifiManager lWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+		return lWifiManager == null ? false : lWifiManager.isWifiEnabled() && lWifiManager.getConnectionInfo() != null && lWifiManager.getConnectionInfo().getIpAddress() != 0;
 	}
 	
 	public static SharedPreferences getDefaultSharedPreferences(Context context) {
@@ -78,5 +88,34 @@ public class AOSUtilsCommon {
 		.setPositiveButton(android.R.string.ok, onConfirmListener);
 		
 		return builder;
+	}
+	
+	public static void submitBugReport(String subject, String emailAddress, Context context) {
+		TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+		
+		String body = context.getString(R.string.help_BugReport) + "\n\n\n\n\n\n";
+		body += "System info: " + "\n";
+		body += "-------------" + "\n";
+		body += "Manufacturer: " + Build.MANUFACTURER + "\n";
+		body += "Brand: " + Build.BRAND + "\n";
+		body += "Device: " + Build.DEVICE + "\n";
+		body += "Model: " + Build.MODEL + "\n";
+		body += "Product: " + Build.PRODUCT + "\n";
+		body += "OS Version: " + System.getProperty("os.version") + "\n";
+		body += "OS Release: " + Build.VERSION.RELEASE + "\n";
+		body += "SDK: " + Build.VERSION.SDK_INT + "\n";
+		body += "Wifi: " + isOnWifi(context) + "\n";
+		body += "Cell Network Type: " + (lTelephonyManager == null ? "null" : lTelephonyManager.getNetworkType());
+		
+		Intent intent = new Intent(Intent.ACTION_SEND);
+		intent.setType("message/rfc822");
+		intent.putExtra(Intent.EXTRA_EMAIL, new String[] { emailAddress });
+		intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+		intent.putExtra(Intent.EXTRA_TEXT, body);
+		try {
+		    context.startActivity(Intent.createChooser(intent, context.getString(R.string.action_SubmitBugReport)));
+		} catch (ActivityNotFoundException e) {
+			AOSUtilsCommon.toast(context.getString(R.string.error_NoEmailApps), context);
+		}
 	}
 }

@@ -13,7 +13,6 @@ import org.aosutils.net.HttpUtils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.wifi.WifiManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 
@@ -117,12 +116,11 @@ public class YtApiStreams {
 	private static ConnectionType getConnectionType(Context context) {
 		// For a full list of networks, see class: android.telephony.TelephonyManager
 		
-		WifiManager lWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 		
 		// If we have a fast connection (WiFi or 3G), then use a medium quality YouTube video
 		if (
-			(lWifiManager.isWifiEnabled() && lWifiManager.getConnectionInfo() != null && lWifiManager.getConnectionInfo().getIpAddress() != 0) ||
+			(AOSUtilsCommon.isOnWifi(context)) ||
 			(lTelephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED && 
 				(
 					lTelephonyManager.getNetworkType() >= 13 /* LTE */ &&  
