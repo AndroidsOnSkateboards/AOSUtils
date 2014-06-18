@@ -7,8 +7,11 @@
     <string name="dialog_Saving">Ahorro ..</string>
     <string name="dialog_Posting">Publicar ..</string>
     <string name="info_Posted">Publicado con éxito.</string>
+    <string name="action_SubmitBugReport">Enviar informe de error ..</string>
+    <string name="help_BugReport">Describe el problema:</string>
     <string name="error_Connection">No se puede conectar a Internet!</string>
     <string name="error_Posting">Problema publicación. Por favor inténtelo de nuevo más tarde.</string>
     <string name="error_Posting_DateTime">Problema publicación. Por favor, compruebe la fecha y la hora y vuelva a intentarlo.</string>
+    <string name="error_NoEmailApps">No hay aplicaciones de correo electrónico instalados.</string>
     <string name="error_Unknown">Error desconocido!</string>
 </resources>

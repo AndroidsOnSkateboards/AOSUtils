@@ -40,7 +40,8 @@ public class YtApiStreams {
 	 */
 	
 	public enum StreamType {
-		VIDEO_AND_AUDIO, AUDIO_ONLY, AUDIO_ONLY_LOW_QUALITY;
+		/* - VIDEO_ONLY streams don't seem to work; Tested on Android 2.3, Android 4.4; Also commented out below.. */
+		VIDEO_AND_AUDIO, VIDEO_AND_AUDIO_LOW_QUALITY, AUDIO_ONLY_OR_VIDEO, AUDIO_ONLY_OR_VIDEO_LOW_QUALITY; //, VIDEO_ONLY;
 	}
 	private enum ConnectionType {
 		SLOW, MEDIUM, FAST;
@@ -48,15 +49,16 @@ public class YtApiStreams {
 	
 	public static String findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
 		String[] recommendedFormats = getRecommendedFormats(context, streamType);
-		return findRecommendedUrl(videoId, recommendedFormats, context);
+		String streamUrl = findRecommendedUrl(videoId, recommendedFormats, context);
+		return streamUrl;
 	}
 	
 	// Returns recommended formats, ordered from most recommended to least recommended
 	private static String[] getRecommendedFormats(Context context, StreamType streamType) {
 		ConnectionType connectionType = getConnectionType(context);
 		
-		if (streamType == StreamType.AUDIO_ONLY) {
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+		if (streamType == StreamType.AUDIO_ONLY_OR_VIDEO) {
+			if (deviceSupportsAudioOnlyStreams()) {
 				// Device supports Audio-only stream; use "medium" quality audio stream (only one ever found & tested)
 				return connectionType == ConnectionType.FAST || connectionType == ConnectionType.MEDIUM ? 
 						new String[] { "140", "18", "17" } :
@@ -69,8 +71,8 @@ public class YtApiStreams {
 						new String[] { "17" };
 			}
 		}
-		else if (streamType == StreamType.AUDIO_ONLY_LOW_QUALITY) {
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+		else if (streamType == StreamType.AUDIO_ONLY_OR_VIDEO_LOW_QUALITY) {
+			if (deviceSupportsAudioOnlyStreams()) {
 				// Device supports Audio-only stream; use "medium" quality audio stream (only one ever tested)
 				return new String[] { "140", "17" };
 			}
@@ -79,7 +81,23 @@ public class YtApiStreams {
 				return new String[] { "17" };
 			}
 		}
-		else {
+		/* - VIDEO_ONLY streams don't seem to work; Tested on Android 2.3, Android 4.4
+		else if (streamType == StreamType.VIDEO_ONLY) {
+			if (connectionType == ConnectionType.FAST) {
+				return new String[] { "136", "135", "134", "133" };
+			}
+			else if (connectionType == ConnectionType.MEDIUM) {
+				return new String[] { "134", "133", "135" };
+			}
+			else {
+				return new String[] { "133", "134", "135" };
+			}
+		}
+		*/
+		else if (streamType == StreamType.VIDEO_AND_AUDIO_LOW_QUALITY) {
+			return new String[] { "17" };
+		}
+		else { // Default: Video+Audio
 			if (connectionType == ConnectionType.FAST) {
 				return new String[] { "22", "18", "17" };
 			}
@@ -90,6 +108,10 @@ public class YtApiStreams {
 				return new String[] { "17" };
 			}
 		}
+	}
+	
+	public static boolean deviceSupportsAudioOnlyStreams() {
+		return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
 	}
 	
 	private static ConnectionType getConnectionType(Context context) {

@@ -7,8 +7,11 @@
 	<string name="dialog_Saving">Speichern ..</string>
     <string name="dialog_Posting">Abschicken ..</string>
     <string name="info_Posted">Erfolgreich geschrieben.</string>
+    <string name="action_SubmitBugReport">Fehlerbericht einreichen ..</string>
+    <string name="help_BugReport">Beschreiben Sie das Problem:</string>
     <string name="error_Connection">Kann keine Verbindung zum Internet aufbauen!</string>
     <string name="error_Posting">Problem Posting. Bitte versuchen Sie es später erneut.</string>
     <string name="error_Posting_DateTime">Problem Posting. Bitte überprüfen Sie Ihre Datums-und Zeiteinstellungen und versuchen Sie es erneut.</string>
+    <string name="error_NoEmailApps">Es gibt keine E-Mail-Apps installiert.</string>
     <string name="error_Unknown">Unbekannter Fehler!</string>
 </resources>

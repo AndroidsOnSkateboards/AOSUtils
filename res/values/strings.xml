@@ -7,8 +7,11 @@
     <string name="dialog_Saving">Saving..</string>
     <string name="dialog_Posting">Posting..</string>
     <string name="info_Posted">Successfully posted.</string>
+    <string name="action_SubmitBugReport">Submit bug report..</string>
+    <string name="help_BugReport">Describe the issue:</string>
     <string name="error_Connection">Cannot connect to internet!</string>
     <string name="error_Posting">Problem posting. Please try again later.</string>
     <string name="error_Posting_DateTime">Problem posting. Please verify your date and time settings and try again.</string>
+    <string name="error_NoEmailApps">There are no email apps installed.</string>
     <string name="error_Unknown">Unknown Error!</string>
 </resources>

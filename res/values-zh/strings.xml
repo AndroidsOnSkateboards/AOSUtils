@@ -7,8 +7,11 @@
 	<string name="dialog_Saving">保存..</string>
 	<string name="dialog_Posting">發帖..</string>
     <string name="info_Posted">發布成功。</string>
+    <string name="action_SubmitBugReport">提交bug報告..</string>
+    <string name="help_BugReport">描述問題：</string>
     <string name="error_Connection">無法連接到網絡！</string>
     <string name="error_Posting">問題張貼。請稍後再試。</string>
     <string name="error_Posting_DateTime">問題張貼。請確認您的日期和時間設置，然後再試一次。</string>
+    <string name="error_NoEmailApps">有沒有安裝電子郵件應用程序。</string>
     <string name="error_Unknown">未知錯誤</string>
 </resources>
