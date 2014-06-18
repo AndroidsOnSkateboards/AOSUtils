@@ -8,6 +8,7 @@
     <string name="dialog_Posting">Posting..</string>
     <string name="info_Posted">Successfully posted.</string>
     <string name="action_SubmitBugReport">Submit bug report..</string>
+    <string name="action_Feedback">Feedback</string>
     <string name="help_BugReport">Describe the issue:</string>
     <string name="error_Connection">Cannot connect to internet!</string>
     <string name="error_Posting">Problem posting. Please try again later.</string>

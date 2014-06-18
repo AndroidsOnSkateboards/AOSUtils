@@ -8,7 +8,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -23,6 +25,16 @@ public class AOSUtilsCommon {
 	//public final static String USER_AGENT_DESKTOP = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)";
 	public final static String USER_AGENT_DESKTOP = "Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0";
 	
+	public static String getAppName(Context context) {
+		PackageManager packageManager = context.getPackageManager();
+		ApplicationInfo appInfo = null;
+		try {
+			appInfo = packageManager.getApplicationInfo(context.getPackageName(), 0);
+		} catch (NameNotFoundException e) {
+			
+		}
+		return appInfo == null ? "null" : packageManager.getApplicationLabel(appInfo).toString();
+	}
 	public static String getAppVersionName(Context context) {
 		PackageInfo appPackage = getAppPackage(context);
 		return appPackage.versionName;
@@ -90,23 +102,28 @@ public class AOSUtilsCommon {
 		return builder;
 	}
 	
-	public static void submitBugReport(String subject, String emailAddress, Context context) {
-		TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-		
+	public static void submitBugReport(String subject, String emailAddress, boolean includeNetworkInfo, Context context) {
 		String body = context.getString(R.string.help_BugReport) + "\n\n\n\n\n\n";
 		body += "System info: " + "\n";
 		body += "-------------" + "\n";
+		body += "App Version: " + String.format("%s %s (%s)", getAppName(context), getAppVersionName(context), getAppVersionCode(context)) + "\n";
 		body += "Manufacturer: " + Build.MANUFACTURER + "\n";
 		body += "Brand: " + Build.BRAND + "\n";
 		body += "Device: " + Build.DEVICE + "\n";
-		body += "Model: " + Build.MODEL + "\n";
 		body += "Product: " + Build.PRODUCT + "\n";
-		body += "OS Version: " + System.getProperty("os.version") + "\n";
-		body += "OS Release: " + Build.VERSION.RELEASE + "\n";
-		body += "SDK: " + Build.VERSION.SDK_INT + "\n";
-		body += "Wifi: " + isOnWifi(context) + "\n";
-		body += "Cell Network Type: " + (lTelephonyManager == null ? "null" : lTelephonyManager.getNetworkType());
+		body += "Model: " + Build.MODEL + "\n";
+		body += "Android Version: " + String.format("%s (API Level %s)", Build.VERSION.RELEASE, Build.VERSION.SDK_INT) + "\n";
+		body += "OS Build: " + Build.DISPLAY + "\n";
+		body += "Kernel: " + System.getProperty("os.version") + "\n";
 		
+		if (includeNetworkInfo) {
+			TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+			
+			body += "Wifi: " + isOnWifi(context) + "\n";
+			body += "Phone Type: " + (lTelephonyManager == null ? "null" : Integer.toString(lTelephonyManager.getPhoneType())) + "\n";
+			body += "Network Operator: " + (lTelephonyManager == null ? "null" : lTelephonyManager.getNetworkCountryIso() + " -" + lTelephonyManager.getNetworkOperatorName()) + "\n";
+			body += "Network Type: " + (lTelephonyManager == null ? "null" : Integer.toString(lTelephonyManager.getNetworkType())) + "\n";
+		}
 		Intent intent = new Intent(Intent.ACTION_SEND);
 		intent.setType("message/rfc822");
 		intent.putExtra(Intent.EXTRA_EMAIL, new String[] { emailAddress });
