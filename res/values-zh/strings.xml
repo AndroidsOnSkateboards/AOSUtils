@@ -8,7 +8,7 @@
 	<string name="dialog_Posting">發帖..</string>
     <string name="info_Posted">發布成功。</string>
     <string name="action_SubmitBugReport">提交bug報告..</string>
-    <string name="action_Feedback">反饋</string>
+    <string name="action_SubmitFeedback">提交反饋..</string>
     <string name="help_BugReport">描述問題：</string>
     <string name="error_Connection">無法連接到網絡！</string>
     <string name="error_Posting">問題張貼。請稍後再試。</string>

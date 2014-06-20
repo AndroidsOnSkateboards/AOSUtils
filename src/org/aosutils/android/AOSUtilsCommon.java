@@ -130,7 +130,7 @@ public class AOSUtilsCommon {
 		intent.putExtra(Intent.EXTRA_SUBJECT, subject);
 		intent.putExtra(Intent.EXTRA_TEXT, body);
 		try {
-		    context.startActivity(Intent.createChooser(intent, context.getString(R.string.action_SubmitBugReport)));
+		    context.startActivity(Intent.createChooser(intent, subject));
 		} catch (ActivityNotFoundException e) {
 			AOSUtilsCommon.toast(context.getString(R.string.error_NoEmailApps), context);
 		}

@@ -8,7 +8,7 @@
     <string name="dialog_Posting">Abschicken ..</string>
     <string name="info_Posted">Erfolgreich geschrieben.</string>
     <string name="action_SubmitBugReport">Fehlerbericht einreichen ..</string>
-    <string name="action_Feedback">Rückkopplung</string>
+    <string name="action_SubmitFeedback">Feedback senden ..</string>
     <string name="help_BugReport">Beschreiben Sie das Problem:</string>
     <string name="error_Connection">Kann keine Verbindung zum Internet aufbauen!</string>
     <string name="error_Posting">Problem Posting. Bitte versuchen Sie es später erneut.</string>

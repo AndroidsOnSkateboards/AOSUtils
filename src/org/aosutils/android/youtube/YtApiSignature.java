@@ -105,22 +105,20 @@ public class YtApiSignature {
 		// Find "C" in this: var A = B.sig || C (B.s), this will be the name of the signature swapping algorithm function
 		String c = null;
 		{
-			String regex = "var (.+)\\=(.+)\\.sig\\|\\|(.+?)\\((.+?)\\.s\\)";
+			String regex = "var [^;]+=[^;]+.sig\\|\\|(.+?)\\([^;]+\\)";
 			Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
 			if (matcher.find()) {
-				c = matcher.group(3);
+				c = matcher.group(1);
 			}
 		}
 		
 		// Find body of function C(D) { ... }, this is the signature swapping algorithm function :)
 		String body = null;
 		if (c != null) {
-			{
-				String regex = "function " + c + "\\((.+?)\\)\\{(.+?)\\}";
-				Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
-				if (matcher.find()) {
-					body = matcher.group(2);
-				}
+			String regex = "function " + Pattern.quote(c) + "\\((.+?)\\)\\{(.+?)\\}";
+			Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
+			if (matcher.find()) {
+				body = matcher.group(2);
 			}
 		}
 		
@@ -150,9 +148,10 @@ public class YtApiSignature {
 			
 			// Join
 			body = replaceAll(body, "[^;]*return [^;]+\\.join\\(\"\"\\)", new int[] { }, "");
+			
+			// Clean up
+			body = body.replace(";", " ").trim();
 		}
-		
-		body = body.replace(";", " ").trim();
 		
 		return body;
 	}
