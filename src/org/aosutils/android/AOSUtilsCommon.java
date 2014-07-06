@@ -1,5 +1,8 @@
 package org.aosutils.android;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -16,6 +19,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -107,11 +111,9 @@ public class AOSUtilsCommon {
 		body += "System info: " + "\n";
 		body += "-------------" + "\n";
 		body += "App Version: " + String.format("%s %s (%s)", getAppName(context), getAppVersionName(context), getAppVersionCode(context)) + "\n";
-		body += "Manufacturer: " + Build.MANUFACTURER + "\n";
-		body += "Brand: " + Build.BRAND + "\n";
-		body += "Device: " + Build.DEVICE + "\n";
-		body += "Product: " + Build.PRODUCT + "\n";
+		body += "Manufacturer: " + (Build.MANUFACTURER.equals(Build.BRAND) ? Build.MANUFACTURER : String.format("%s / %s", Build.MANUFACTURER, Build.BRAND)) + "\n";
 		body += "Model: " + Build.MODEL + "\n";
+		body += "Device: " + (Build.DEVICE.equals(Build.PRODUCT) ? Build.DEVICE : String.format("%s / %s", Build.DEVICE, Build.PRODUCT)) + "\n";
 		body += "Android Version: " + String.format("%s (API Level %s)", Build.VERSION.RELEASE, Build.VERSION.SDK_INT) + "\n";
 		body += "OS Build: " + Build.DISPLAY + "\n";
 		body += "Kernel: " + System.getProperty("os.version") + "\n";
@@ -120,9 +122,9 @@ public class AOSUtilsCommon {
 			TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 			
 			body += "Wifi: " + isOnWifi(context) + "\n";
-			body += "Phone Type: " + (lTelephonyManager == null ? "null" : Integer.toString(lTelephonyManager.getPhoneType())) + "\n";
+			body += "Phone Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getPhoneType()), getTelephonyManagerDescription("PHONE_TYPE_", lTelephonyManager.getPhoneType()))) + "\n";
 			body += "Network Operator: " + (lTelephonyManager == null ? "null" : lTelephonyManager.getNetworkCountryIso() + " -" + lTelephonyManager.getNetworkOperatorName()) + "\n";
-			body += "Network Type: " + (lTelephonyManager == null ? "null" : Integer.toString(lTelephonyManager.getNetworkType())) + "\n";
+			body += "Network Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getNetworkType()), getTelephonyManagerDescription("NETWORK_TYPE_", lTelephonyManager.getNetworkType()))) + "\n";
 		}
 		Intent intent = new Intent(Intent.ACTION_SEND);
 		intent.setType("message/rfc822");
@@ -134,5 +136,26 @@ public class AOSUtilsCommon {
 		} catch (ActivityNotFoundException e) {
 			AOSUtilsCommon.toast(context.getString(R.string.error_NoEmailApps), context);
 		}
+	}
+	
+	// Will provide a description of phone type (Eg. GSM) or network type (Eg. LTE) via reflection to be compatible with all Android API Levels
+	private static String getTelephonyManagerDescription(String constantPrefix, int constantValue) {
+		ArrayList<String> matchingValues = new ArrayList<String>();
+		
+		Field[] fields = TelephonyManager.class.getFields();
+		for (Field field : fields) {
+			if (field.getName().startsWith(constantPrefix)) {
+				try {
+					if (field.getInt(null) == constantValue) {
+						String matchingValue = field.getName().replace(constantPrefix, "");
+						matchingValues.add(matchingValue);
+					}
+				} catch (Exception e) {
+					
+				} 
+			}
+		}
+		
+		return TextUtils.join(",  ", matchingValues);
 	}
 }
