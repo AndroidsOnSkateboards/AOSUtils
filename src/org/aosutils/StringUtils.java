@@ -65,6 +65,23 @@ public class StringUtils {
 		return String.format("%1$-" + spaces + "s", s);
 	}
 	
+	public static String toTitleCase(String str) {
+		StringBuilder result = new StringBuilder();
+		
+		boolean newWord = true;
+		for (int i=0; i<str.length(); i++) {
+			char c = str.charAt(i);
+			if (newWord == true) {
+				c = Character.toUpperCase(c);
+			}
+			result.append(c);
+			
+			newWord = (c == ' ' || c == '\n' || c == '\r');
+		}
+		
+		return result.toString();
+	}
+	
 	public static String format(String formattedString, Collection<? extends Object> values) {
 		for (Object value : values) {
 			int firstFormatterIndex = formattedString.indexOf("%");
