@@ -3,9 +3,12 @@ package org.aosutils.android;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
+import org.aosutils.StringUtils;
+
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
+import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,7 +25,10 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.Toast;
 
 public class AOSUtilsCommon {
@@ -70,9 +76,13 @@ public class AOSUtilsCommon {
 		return PreferenceManager.getDefaultSharedPreferences(context);
 	}
 	
-	public static void hideKeyboard(View view) {
-		InputMethodManager imm = (InputMethodManager) view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+	public static void showKeyboard(EditText editText) {
+		 InputMethodManager imm = (InputMethodManager) editText.getContext().getSystemService(Service.INPUT_METHOD_SERVICE);
+		 imm.showSoftInput(editText, 0);
+	}
+	public static void hideKeyboard(EditText editText) {
+		InputMethodManager imm = (InputMethodManager) editText.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
 	}
 	
 	public static void toast(String message, Context context) {
@@ -92,9 +102,16 @@ public class AOSUtilsCommon {
 	}
 	
 	public static Dialog confirm(String title, View view, Context context, DialogInterface.OnClickListener onConfirmListener) {
-		return confirmBuilder(title, context, onConfirmListener)
-			.setView(view)
-			.show();
+		Builder dialogBuilder = confirmBuilder(title, context, onConfirmListener)
+			.setView(view);
+		
+		AlertDialog dialog = dialogBuilder.create();
+		if (view instanceof EditText) {
+			dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+		}
+		
+		dialog.show();
+		return dialog;
 	}
 	
 	private static Builder confirmBuilder(String title, Context context, DialogInterface.OnClickListener onConfirmListener) {
@@ -106,8 +123,29 @@ public class AOSUtilsCommon {
 		return builder;
 	}
 	
-	public static void submitBugReport(String subject, String emailAddress, boolean includeNetworkInfo, Context context) {
-		String body = context.getString(R.string.help_BugReport) + "\n\n\n\n\n\n";
+	public static void submitBugReportPopup(final String subject, final String emailAddress, final boolean includeNetworkInfo, final Context context) {
+		final EditText editText = new EditText(context);
+		editText.setImeOptions(EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE);
+		confirm(StringUtils.toTitleCase(context.getString(R.string.help_BugReport)), editText, context, new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				String issue = editText.getText().toString();
+				if (!issue.equals("")) {
+					submitBugReport(subject, emailAddress, issue, includeNetworkInfo, context);
+				}
+			}
+		});
+	}
+	public static void submitBugReport(String subject, String emailAddress, String bodyText, boolean includeNetworkInfo, Context context) {
+		String body = "";
+		if (bodyText == null || bodyText.equals("")) {
+			body += context.getString(R.string.help_BugReport) + "\n\n";
+		}
+		else {
+			body += bodyText;
+		}
+		
+		body += "\n\n\n\n";
 		body += "System info: " + "\n";
 		body += "-------------" + "\n";
 		body += "App Version: " + String.format("%s %s (%s)", getAppName(context), getAppVersionName(context), getAppVersionCode(context)) + "\n";
