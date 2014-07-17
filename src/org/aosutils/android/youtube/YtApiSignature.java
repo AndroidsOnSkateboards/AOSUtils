@@ -115,11 +115,7 @@ public class YtApiSignature {
 		// Find body of function C(D) { ... }, this is the signature swapping algorithm function :)
 		String body = null;
 		if (c != null) {
-			String regex = "function " + Pattern.quote(c) + "\\((.+?)\\)\\{(.+?)\\}";
-			Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
-			if (matcher.find()) {
-				body = matcher.group(2);
-			}
+			body = getFunctionBody(c, jsSrc);
 		}
 		
 		if (body != null) {
@@ -140,12 +136,13 @@ public class YtApiSignature {
 			// Reverse
 			body = replaceAll(body, "[^;]+=[^;]+\\.reverse\\(\\)[^;]*", new int[] { }, "r");
 			
-			// Swap
-			body = replaceAll(body, "[^;]+=[^;]+\\([^;]+,(.+?)\\)[^;]*", new int[] { 1 }, "w%s");
-			
 			// Slice
 			body = replaceAll(body, "[^;]+=[^;]+\\.slice\\((.*?)\\)[^;]*", new int[] { 1 }, "s%s");
 			
+			// Function call to Swap/Reverse/Slice
+			//body = replaceAll(body, "[^;]+=[^;]+\\([^;]+,(.+?)\\)[^;]*", new int[] { 1 }, "w%s");
+			body = replaceFunctions(body, jsSrc);
+						
 			// Join
 			body = replaceAll(body, "[^;]*return [^;]+\\.join\\(\"\"\\)", new int[] { }, "");
 			
@@ -154,6 +151,25 @@ public class YtApiSignature {
 		}
 		
 		return body;
+	}
+	
+	private static String getFunctionBody(String functionName, String document) {
+		String regex;
+		if (functionName.contains(".")) {
+			String functionVar = functionName.substring(0, functionName.indexOf("."));
+			String function = functionName.substring(functionName.indexOf(".")+1);
+			
+			regex = "var " + functionVar + "=\\{.*?" + function + ":function\\(.*?\\)\\{(.*?)\\}";
+		}
+		else {
+			regex = "function " + Pattern.quote(functionName) + "\\(.+?\\)\\{(.+?)\\}";
+		}
+		
+		Matcher matcher = Pattern.compile(regex).matcher(document);
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+		return null;
 	}
 	
 	private static String replaceAll(String document, String regexToFind, int[] valueIndicesToExtract, String formattedStringToReplace) {
@@ -178,5 +194,28 @@ public class YtApiSignature {
 		}
 		
 		return document;
+	}
+	
+	private static String replaceFunctions(String algorithmFunction, String jsSrc) {
+		String regexToFind = "[^;]+=(.*?)\\([^;]+,(.+?)\\)[^;]*";
+		
+		Matcher matcher = Pattern.compile(regexToFind).matcher(algorithmFunction);
+		while (matcher.find()) {
+			//String match = document.substring(matcher.start(), matcher.end());
+			String fnName = matcher.group(1);
+			String fnValue = matcher.group(2);
+			
+			String fnBody = getFunctionBody(fnName, jsSrc);
+			String replacement = fnBody.contains("reverse") ? "r" :
+				fnBody.contains("slice") ? "s"+fnValue :
+				"w"+fnValue;
+			
+			algorithmFunction = algorithmFunction.substring(0, matcher.start()) + replacement + algorithmFunction.substring(matcher.end());
+			
+			// Reset matcher for new document (with new replacements)
+			matcher = Pattern.compile(regexToFind).matcher(algorithmFunction);
+		}
+		
+		return algorithmFunction;
 	}
 }
