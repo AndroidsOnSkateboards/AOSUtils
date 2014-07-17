@@ -2,8 +2,10 @@ package org.aosutils.android;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import org.aosutils.StringUtils;
+import org.aosutils.net.HttpUtils;
 
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -29,6 +31,8 @@ import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class AOSUtilsCommon {
@@ -105,9 +109,19 @@ public class AOSUtilsCommon {
 		Builder dialogBuilder = confirmBuilder(title, context, onConfirmListener)
 			.setView(view);
 		
+		if (view instanceof TextView) {
+			ScrollView scrollView = new ScrollView(context);
+			scrollView.addView(view);
+			dialogBuilder.setView(scrollView);
+		}
+
 		AlertDialog dialog = dialogBuilder.create();
+		
 		if (view instanceof EditText) {
-			dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+			dialog.getWindow().setSoftInputMode(
+					WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE |
+					WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+			);
 		}
 		
 		dialog.show();
@@ -124,19 +138,31 @@ public class AOSUtilsCommon {
 	}
 	
 	public static void submitBugReportPopup(final String subject, final String emailAddress, final boolean includeNetworkInfo, final Context context) {
+		final StringBuilder publicIpAddress = new StringBuilder();
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				publicIpAddress.append(HttpUtils.getPublicIpAddress(null));
+			}
+		}).start();
+		
 		final EditText editText = new EditText(context);
 		editText.setImeOptions(EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE);
+		editText.setMinLines(5);
+		editText.setGravity(Gravity.TOP);
 		confirm(StringUtils.toTitleCase(context.getString(R.string.help_BugReport)), editText, context, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				String issue = editText.getText().toString();
 				if (!issue.equals("")) {
-					submitBugReport(subject, emailAddress, issue, includeNetworkInfo, context);
+					// Hopefully the IP address was retrieved while the user was typing in the "issue". Otherwise it will be obtained later.
+					submitBugReport(subject, emailAddress, issue, includeNetworkInfo, publicIpAddress.toString(), context);
 				}
 			}
 		});
 	}
-	public static void submitBugReport(String subject, String emailAddress, String bodyText, boolean includeNetworkInfo, Context context) {
+	
+	public static void submitBugReport(String subject, String emailAddress, String bodyText, boolean includeNetworkInfo, String publicIpAddress, Context context) {
 		String body = "";
 		if (bodyText == null || bodyText.equals("")) {
 			body += context.getString(R.string.help_BugReport) + "\n\n";
@@ -149,20 +175,27 @@ public class AOSUtilsCommon {
 		body += "System info: " + "\n";
 		body += "-------------" + "\n";
 		body += "App Version: " + String.format("%s %s (%s)", getAppName(context), getAppVersionName(context), getAppVersionCode(context)) + "\n";
-		body += "Manufacturer: " + (Build.MANUFACTURER.equals(Build.BRAND) ? Build.MANUFACTURER : String.format("%s / %s", Build.MANUFACTURER, Build.BRAND)) + "\n";
+		body += "System Language: " + Locale.getDefault().toString()  + " / " + Locale.getDefault().getDisplayLanguage() + "\n";
+		body += "Device Manufacturer: " + (Build.MANUFACTURER.equals(Build.BRAND) ? Build.MANUFACTURER : String.format("%s / %s", Build.MANUFACTURER, Build.BRAND)) + "\n";
 		body += "Model: " + Build.MODEL + "\n";
 		body += "Device: " + (Build.DEVICE.equals(Build.PRODUCT) ? Build.DEVICE : String.format("%s / %s", Build.DEVICE, Build.PRODUCT)) + "\n";
 		body += "Android Version: " + String.format("%s (API Level %s)", Build.VERSION.RELEASE, Build.VERSION.SDK_INT) + "\n";
 		body += "OS Build: " + Build.DISPLAY + "\n";
 		body += "Kernel: " + System.getProperty("os.version") + "\n";
 		
-		if (includeNetworkInfo) {
+		if (includeNetworkInfo) {		
 			TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+			String simOperator = (lTelephonyManager == null || lTelephonyManager.getSimCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getSimOperatorName(), lTelephonyManager.getSimCountryIso(), new Locale("", lTelephonyManager.getSimCountryIso()).getDisplayName()));
+			String networkOperator = (lTelephonyManager == null || lTelephonyManager.getNetworkCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getNetworkOperatorName(), lTelephonyManager.getNetworkCountryIso(), new Locale("", lTelephonyManager.getNetworkCountryIso()).getDisplayName()));
 			
 			body += "Wifi: " + isOnWifi(context) + "\n";
 			body += "Phone Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getPhoneType()), getTelephonyManagerDescription("PHONE_TYPE_", lTelephonyManager.getPhoneType()))) + "\n";
-			body += "Network Operator: " + (lTelephonyManager == null ? "null" : lTelephonyManager.getNetworkCountryIso() + " -" + lTelephonyManager.getNetworkOperatorName()) + "\n";
+			if (!simOperator.equals(networkOperator)) {
+				body += "SIM Operator: " + simOperator + "\n";
+			}
+			body += "Network Operator: " + networkOperator + "\n";
 			body += "Network Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getNetworkType()), getTelephonyManagerDescription("NETWORK_TYPE_", lTelephonyManager.getNetworkType()))) + "\n";
+			body += "Public IP Address: " + publicIpAddress + "\n";
 		}
 		Intent intent = new Intent(Intent.ACTION_SEND);
 		intent.setType("message/rfc822");
