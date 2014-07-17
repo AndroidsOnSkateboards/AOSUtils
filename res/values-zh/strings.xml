@@ -10,6 +10,8 @@
     <string name="action_SubmitBugReport">提交bug報告..</string>
     <string name="action_SubmitFeedback">提交反饋..</string>
     <string name="help_BugReport">描述問題：</string>
+    <string name="warning">警告</string>
+    <string name="error">錯誤</string>
     <string name="error_Connection">無法連接到網絡！</string>
     <string name="error_Posting">問題張貼。請稍後再試。</string>
     <string name="error_Posting_DateTime">問題張貼。請確認您的日期和時間設置，然後再試一次。</string>
