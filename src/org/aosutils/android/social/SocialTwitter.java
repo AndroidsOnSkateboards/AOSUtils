@@ -16,13 +16,13 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.LoadingTask;
+import org.aosutils.android.LoadingTaskActivity;
 import org.aosutils.android.R;
 import org.aosutils.net.HttpUtils;
 import org.aosutils.net.HttpUtils.HTTPUnauthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.backported.Base64;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
@@ -63,11 +63,11 @@ public class SocialTwitter {
 		this.activityRequestCodeForLogin = activityRequestCodeForLogin;
 	}
 	
-	private void getRequestToken(Activity activity) {
+	private void getRequestToken(LoadingTaskActivity activity) {
 		new GetRequestTokenTask(activity).execute();
 	}
 	private class GetRequestTokenTask extends AuthTask<Object, Object, Object> {
-		public GetRequestTokenTask(Activity activity) {
+		public GetRequestTokenTask(LoadingTaskActivity activity) {
 			super(activity);
 		}
 		
@@ -101,7 +101,7 @@ public class SocialTwitter {
 		}
 	}
 	
-	public void onLoginSuccessful(Intent data, Activity activity, Runnable onSuccessfulPostRunnable) {
+	public void onLoginSuccessful(Intent data, LoadingTaskActivity activity, Runnable onSuccessfulPostRunnable) {
 		String oAuthToken = data.getExtras().getString(SocialTwitter.OAUTH_RETURN_REQUEST_TOKEN);
 		String oAuthVerifier = data.getExtras().getString(SocialTwitter.OAUTH_RETURN_REQUEST_VERIFIER);
 		
@@ -113,7 +113,7 @@ public class SocialTwitter {
 		String requestVerifier;
 		Runnable onSuccessfulTweetRunnable;
 		
-		public GetAccessTokenTask(String requestToken, String requestVerifier, Activity activity, Runnable onSuccessfulPost) {
+		public GetAccessTokenTask(String requestToken, String requestVerifier, LoadingTaskActivity activity, Runnable onSuccessfulPost) {
 			super(activity);
 			this.requestToken = requestToken;
 			this.requestVerifier = requestVerifier;
@@ -157,14 +157,14 @@ public class SocialTwitter {
 		}
 	}
 	
-	public void tweet(String message, Activity activity, Runnable onSuccessfulTweetRunnable) {
+	public void tweet(String message, LoadingTaskActivity activity, Runnable onSuccessfulTweetRunnable) {
 		new TweetTask(message, activity, onSuccessfulTweetRunnable).execute();
 	}
 	private class TweetTask extends AuthenticatedTask<Object, Object, Object> {
 		String message;
 		Runnable onSuccessfulTweetRunnable;
 		
-		public TweetTask(String message, Activity activity, Runnable onSuccessfulTweetRunnable) {
+		public TweetTask(String message, LoadingTaskActivity activity, Runnable onSuccessfulTweetRunnable) {
 			super(apiKey, apiSecret, activity);
 			this.message = message;
 			this.onSuccessfulTweetRunnable = onSuccessfulTweetRunnable;
@@ -221,7 +221,7 @@ public class SocialTwitter {
 	}
 	
 	private abstract class AuthenticatedTask<A, B, C> extends TwitterTask<Object, Object, Object> {
-		public AuthenticatedTask(String apiKey, String secret, Activity activity) {
+		public AuthenticatedTask(String apiKey, String secret, LoadingTaskActivity activity) {
 			super(activity);
 		}
 		
@@ -253,7 +253,7 @@ public class SocialTwitter {
 	}
 	
 	private abstract class AuthTask<A, B, C> extends TwitterTask<Object, Object, Object> {
-		public AuthTask(Activity activity) {
+		public AuthTask(LoadingTaskActivity activity) {
 			super(activity);
 		}
 		
@@ -281,7 +281,7 @@ public class SocialTwitter {
 	private abstract class TwitterTask<A, B, C> extends LoadingTask<Object, Object, Object> {
 		String response;
 		
-		public TwitterTask(Activity activity) {
+		public TwitterTask(LoadingTaskActivity activity) {
 			super(activity, R.string.dialog_Loading);
 		}
 

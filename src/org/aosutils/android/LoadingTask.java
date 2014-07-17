@@ -1,13 +1,12 @@
 package org.aosutils.android;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 
 public abstract class LoadingTask<A, B, C> extends AsyncTask<Object, Object, Object> {
-	private Activity activity;
+	private LoadingTaskActivity activity;
 	private int loadingTextResId;
 	
-	public LoadingTask(Activity activity, int loadingTextResId) {
+	public LoadingTask(LoadingTaskActivity activity, int loadingTextResId) {
 		this.activity = activity;
 		this.loadingTextResId = loadingTextResId;
 	}
@@ -35,7 +34,7 @@ public abstract class LoadingTask<A, B, C> extends AsyncTask<Object, Object, Obj
 		activity.removeDialog(loadingTextResId);
 	}
 	
-	public Activity getActivity() {
+	public LoadingTaskActivity getActivity() {
 		return activity;
 	}
 	
