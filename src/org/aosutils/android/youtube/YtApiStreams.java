@@ -42,8 +42,8 @@ public class YtApiStreams {
 		/* - VIDEO_ONLY streams don't seem to work; Tested on Android 2.3, Android 4.4; Also commented out below.. */
 		VIDEO_AND_AUDIO, VIDEO_AND_AUDIO_LOW_QUALITY, AUDIO_ONLY_OR_VIDEO, AUDIO_ONLY_OR_VIDEO_LOW_QUALITY; //, VIDEO_ONLY;
 	}
-	private enum ConnectionType {
-		SLOW, MEDIUM, FAST;
+	public enum ConnectionType {
+		UNUSABLE, SLOW, MEDIUM, FAST;
 	}
 	
 	public static String findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
@@ -98,7 +98,7 @@ public class YtApiStreams {
 		}
 		else { // Default: Video+Audio
 			if (connectionType == ConnectionType.FAST) {
-				return new String[] { "22", "18", "17" };
+				return new String[] { /* untested: "22", */ "18", "17" };
 			}
 			else if (connectionType == ConnectionType.MEDIUM) {
 				return new String[] { "18", "17" };
@@ -113,7 +113,7 @@ public class YtApiStreams {
 		return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2;
 	}
 	
-	private static ConnectionType getConnectionType(Context context) {
+	public static ConnectionType getConnectionType(Context context) {
 		// For a full list of networks, see class: android.telephony.TelephonyManager
 		
 		TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
@@ -133,14 +133,29 @@ public class YtApiStreams {
 			lTelephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED &&
 				(
 					lTelephonyManager.getNetworkType() >= 3 /* UMTS / EVDO / HSPA */ &&  
-					lTelephonyManager.getNetworkType() != 4 /* CDMA, should be considered SLOW */ &&
-					lTelephonyManager.getNetworkType() != 11 /* iDEN, should be considered SLOW */
+					lTelephonyManager.getNetworkType() != 4 /* CDMA#4, should be considered UNUSABLE */ &&
+					lTelephonyManager.getNetworkType() != 11 /* iDEN, should be considered UNUSABLE */
 				)
 			) {
 			return ConnectionType.MEDIUM;
 		}
+		else if (
+				lTelephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED &&
+					(
+						lTelephonyManager.getNetworkType() >= 2 /* EDGE/CDMA#2 */
+					)
+				) {
+				return ConnectionType.SLOW;
+		}
 		else {
-			return ConnectionType.SLOW;
+			/*
+			 * 0 - NONE/UNKNOWN
+			 * 1 - GSM/GPRS
+			 * 4 - CDMA#4
+			 * 11 - iDEN
+			 * 
+			 */
+			return ConnectionType.UNUSABLE;
 		}
 	}
 	
