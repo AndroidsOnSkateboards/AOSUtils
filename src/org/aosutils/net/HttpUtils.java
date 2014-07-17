@@ -98,4 +98,31 @@ public class HttpUtils {
 		writer.write(output);
 		writer.flush();
 	}
+	
+	public static String getPublicIpAddress(final Integer httpTimeout) {
+		final StringBuilder ipInfo = new StringBuilder();
+		Thread thread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					//String url = "http://checkip.dyndns.org/";
+					String url = "http://api.ipify.org/";
+					ipInfo.append(HttpUtils.get(url, null, httpTimeout));
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		thread.start();
+		String ip = null;
+		try {
+			thread.join();
+			if (!("".equals(ipInfo.toString().trim()))) {
+				ip = ipInfo.toString().trim();
+			}
+		} catch (InterruptedException e) {
+		}
+		
+		return ip;
+	}
 }
