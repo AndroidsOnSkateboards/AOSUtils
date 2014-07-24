@@ -197,17 +197,26 @@ public class YtApiSignature {
 	}
 	
 	private static String replaceFunctions(String algorithmFunction, String jsSrc) {
-		String regexToFind = "[^;]+=(.*?)\\([^;]+,(.+?)\\)[^;]*";
+		String regexToFind = "[^;]*?[=]*([^;]*?)\\(([^;]+?),([^;]+?)\\)[^;]*";
 		
 		Matcher matcher = Pattern.compile(regexToFind).matcher(algorithmFunction);
 		while (matcher.find()) {
-			//String match = document.substring(matcher.start(), matcher.end());
+			//String match = algorithmFunction.substring(matcher.start(), matcher.end());
 			String fnName = matcher.group(1);
-			String fnValue = matcher.group(2);
+			String fnValue1 = matcher.group(2);
+			String fnValue2 = matcher.group(3);
+			
+			String fnValue = fnValue2;
+			try {
+				Double.parseDouble(fnValue2);
+			}
+			catch (NumberFormatException e) {
+				fnValue = fnValue1;
+			}
 			
 			String fnBody = getFunctionBody(fnName, jsSrc);
 			String replacement = fnBody.contains("reverse") ? "r" :
-				fnBody.contains("slice") ? "s"+fnValue :
+				fnBody.contains("slice") || fnBody.contains("splice") ? "s"+fnValue :
 				"w"+fnValue;
 			
 			algorithmFunction = algorithmFunction.substring(0, matcher.start()) + replacement + algorithmFunction.substring(matcher.end());
