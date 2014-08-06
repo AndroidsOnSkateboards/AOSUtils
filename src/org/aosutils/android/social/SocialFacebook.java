@@ -5,9 +5,8 @@ import java.net.MalformedURLException;
 import java.util.Map;
 
 import org.aosutils.android.AOSUtilsCommon;
-import org.aosutils.android.LoadingTask;
-import org.aosutils.android.LoadingTaskActivity;
 import org.aosutils.android.R;
+import org.aosutils.android.loadingtask.LoadingTask;
 import org.aosutils.net.HttpUtils;
 import org.aosutils.net.HttpUtils.HTTPUnauthorizedException;
 import org.json.JSONException;
@@ -47,15 +46,15 @@ public class SocialFacebook {
 		}
 	}
 	
-	public void post(String action, Map<String, String> properties, LoadingTaskActivity activity, Runnable onSuccessfulPost) {
-		new PostTask(action, properties, activity, onSuccessfulPost).execute();
+	public void post(String action, Map<String, String> properties, Activity loadingTaskActivity, Runnable onSuccessfulPost) {
+		new PostTask(action, properties, loadingTaskActivity, onSuccessfulPost).execute();
 	}
 	
 	private class PostTask extends LoadingTask<Object, Object, Object> {
 		Runnable onSuccessfulPost;
 		
-		public PostTask(String action, Map<String, String> properties, LoadingTaskActivity activity, Runnable onSuccessfulPost) {
-			super(activity, R.string.dialog_Posting);
+		public PostTask(String action, Map<String, String> properties, Activity loadingTaskActivity, Runnable onSuccessfulPost) {
+			super(loadingTaskActivity, R.string.dialog_Posting);
 			pendingPost = new PendingPost(action, properties);
 			this.onSuccessfulPost = onSuccessfulPost;
 		}
@@ -105,7 +104,7 @@ public class SocialFacebook {
 		SocialCommon.oauthLogin(activityRequestCodeForLogin, uri.toString(), new String[] { OAUTH_RETURN_CODE }, activity);
 	}
 	
-	public void onLoginSuccessful(Intent data, LoadingTaskActivity activity, Runnable onSuccessfulPostRunnable) {
+	public void onLoginSuccessful(Intent data, Activity activity, Runnable onSuccessfulPostRunnable) {
 		String oAuthCode = data.getExtras().getString(SocialFacebook.OAUTH_RETURN_CODE);
 		new GetAndStoreAccessTokenTask(oAuthCode, activity, onSuccessfulPostRunnable).execute();
 	}
@@ -114,7 +113,7 @@ public class SocialFacebook {
 		String code;
 		Runnable onSuccessfulPost;
 		
-		public GetAndStoreAccessTokenTask(String code, LoadingTaskActivity activity, Runnable onSuccessfulPost) {
+		public GetAndStoreAccessTokenTask(String code, Activity activity, Runnable onSuccessfulPost) {
 			super(activity, R.string.dialog_Posting);
 			this.code = code;
 			this.onSuccessfulPost = onSuccessfulPost;

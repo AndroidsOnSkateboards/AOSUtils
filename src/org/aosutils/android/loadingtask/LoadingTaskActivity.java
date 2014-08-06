@@ -1,21 +1,20 @@
-package org.aosutils.android;
+package org.aosutils.android.loadingtask;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 
-public abstract class LoadingTaskActivity extends Activity {
+public abstract class LoadingTaskActivity extends Activity implements AbstractLoadingTaskActivity {
 	private int loadingTextResourceId = -1;
 	
-	@Override 
+	@Override
 	public void onPause() {
-		removeDialog(loadingTextResourceId);
+		LoadingTask.removeDialog(loadingTextResourceId, this);
 		super.onPause();
 	}
 	
 	@Override
 	public Dialog onCreateDialog(int loadingTextResourceId) {
 		this.loadingTextResourceId = loadingTextResourceId;
-		return ProgressDialog.show(this, "", getResources().getString(loadingTextResourceId), true);
+		return LoadingTask.showDialog(loadingTextResourceId, this);
 	}
 }
