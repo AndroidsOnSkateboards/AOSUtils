@@ -46,10 +46,15 @@ public class YtApiStreams {
 		UNUSABLE, SLOW, MEDIUM, FAST;
 	}
 	
-	public static String findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
+	public static class StreamResult {
+		public String stream;
+		public Exception desktopSiteException;
+	}
+	
+	public static StreamResult findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
 		String[] recommendedFormats = getRecommendedFormats(context, streamType);
-		String streamUrl = findRecommendedUrl(videoId, recommendedFormats, context);
-		return streamUrl;
+		StreamResult streamResult = findRecommendedUrl(videoId, recommendedFormats, context);
+		return streamResult;
 	}
 	
 	// Returns recommended formats, ordered from most recommended to least recommended
@@ -159,33 +164,51 @@ public class YtApiStreams {
 		}
 	}
 	
-	private static String findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws FileNotFoundException, MalformedURLException, IOException {
-		HashMap<String, String> urls = getFormatsFromDesktopSite(videoId, context);
+	private static StreamResult findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws FileNotFoundException, MalformedURLException, IOException {
+		StreamResult streamResult = new StreamResult();
+		
+		HashMap<String, String> urls = new HashMap<String, String>();
+		
+		try {
+			urls = getFormatsFromDesktopSite(videoId, context);
+		}
+		catch (Exception e) {
+			streamResult.desktopSiteException = e;
+		}
+		
 		if (urls.size() == 0) {
 			urls = getFormatsFromVideoInformation(videoId, context);
 		}
 		
 		for (String recommendedFormat : recommendedFormats) {
 			if (urls.containsKey(recommendedFormat)) {
-				return urls.get(recommendedFormat);
+				streamResult.stream = urls.get(recommendedFormat);
 			}
 		}
 		
 		// Recommended format wasn't found, look for any format
-		if (urls.size() > 0) {
+		if (streamResult.stream == null && urls.size() > 0) {
 			// Generally sorted by highest format first
-			return urls.get(0);
+			streamResult.stream = urls.get(0);
 		}
 		
 		// Finally, give up
-		return null;
+		return streamResult;
+	}
+	
+	public static String getDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
+		String uri = "https://www.youtube.com/watch?v=" + videoId;
+		HashMap<String, String> headers = new HashMap<String, String>();
+		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
+		
+		// Android 2.1 and lower fail on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
+		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
+		
+		return HttpUtils.request(uri, headers, false, null, _YtApiConstants.HttpTimeout, null, forceTrustSSLCert);
 	}
 	
 	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
-		String uri = "http://www.youtube.com/watch?v=" + videoId;
-		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
-		String page = HttpUtils.get(uri, headers, _YtApiConstants.HttpTimeout);
+		String page = getDesktopSite(videoId);
 		
 		// This page contains algorithm info, so check it against the current used algorithm and update if necessary
 		String algorithm = getOrUpdateAlgorithm(page, context);
@@ -319,18 +342,21 @@ public class YtApiStreams {
 			String itag = paramMap.get("itag");
 			String feedUrl = paramMap.get("url");
 			
-			if (paramMap.containsKey("s")) { // Secure link, decode
-				String signature = paramMap.get("s");
-				
-				if (algorithm != null) {
-					feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
-					
-					// Only store the format if the signature has been successfully decoded
+			if (feedUrl != null) {
+				if (!paramMap.containsKey("s")) { // Standard link
 					formats.put(itag, feedUrl);
 				}
-			}
-			else {
-				formats.put(itag, feedUrl);
+				else { // Secure link, decode
+					String signature = paramMap.get("s");
+					
+					if (algorithm != null) {
+						feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
+						
+						// Only store the format if the signature has been successfully decoded
+						formats.put(itag, feedUrl);
+					}
+					
+				}
 			}
 		}
 		
