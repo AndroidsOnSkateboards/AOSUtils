@@ -20,6 +20,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -137,7 +138,7 @@ public class AOSUtilsCommon {
 		return builder;
 	}
 	
-	public static void submitBugReportPopup(final String subject, final String emailAddress, final boolean includeNetworkInfo, final Context context) {
+	public static void submitBugReportPopup(final String subject, final String emailAddress, final ArrayList<Uri> attachments, final boolean includeNetworkInfo, final Context context) {
 		final StringBuilder publicIpAddress = new StringBuilder();
 		new Thread(new Runnable() {
 			@Override
@@ -156,13 +157,13 @@ public class AOSUtilsCommon {
 				String issue = editText.getText().toString();
 				if (!issue.equals("")) {
 					// Hopefully the IP address was retrieved while the user was typing in the "issue". Otherwise it will be obtained later.
-					submitBugReport(subject, emailAddress, issue, includeNetworkInfo, publicIpAddress.toString(), context);
+					submitBugReport(subject, emailAddress, issue, attachments, includeNetworkInfo, publicIpAddress.toString(), context);
 				}
 			}
 		});
 	}
 	
-	public static void submitBugReport(String subject, String emailAddress, String bodyText, boolean includeNetworkInfo, String publicIpAddress, Context context) {
+	public static void submitBugReport(String subject, String emailAddress, String bodyText, ArrayList<Uri> attachments, boolean includeNetworkInfo, String publicIpAddress, Context context) {
 		String body = "";
 		if (bodyText == null || bodyText.equals("")) {
 			body += context.getString(R.string.help_BugReport) + "\n\n";
@@ -185,23 +186,29 @@ public class AOSUtilsCommon {
 		
 		if (includeNetworkInfo) {		
 			TelephonyManager lTelephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-			String simOperator = (lTelephonyManager == null || lTelephonyManager.getSimCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getSimOperatorName(), lTelephonyManager.getSimCountryIso(), new Locale("", lTelephonyManager.getSimCountryIso()).getDisplayName()));
-			String networkOperator = (lTelephonyManager == null || lTelephonyManager.getNetworkCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getNetworkOperatorName(), lTelephonyManager.getNetworkCountryIso(), new Locale("", lTelephonyManager.getNetworkCountryIso()).getDisplayName()));
 			
 			body += "Wifi: " + isOnWifi(context) + "\n";
 			body += "Phone Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getPhoneType()), getTelephonyManagerDescription("PHONE_TYPE_", lTelephonyManager.getPhoneType()))) + "\n";
-			if (!simOperator.equals(networkOperator)) {
-				body += "SIM Operator: " + simOperator + "\n";
-			}
-			body += "Network Operator: " + networkOperator + "\n";
+			body += "Network Operator: " + (lTelephonyManager == null || lTelephonyManager.getNetworkCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getNetworkOperatorName(), lTelephonyManager.getNetworkCountryIso(), new Locale("", lTelephonyManager.getNetworkCountryIso()).getDisplayName())) + "\n";
 			body += "Network Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getNetworkType()), getTelephonyManagerDescription("NETWORK_TYPE_", lTelephonyManager.getNetworkType()))) + "\n";
 			body += "Public IP Address: " + publicIpAddress + "\n";
 		}
-		Intent intent = new Intent(Intent.ACTION_SEND);
-		intent.setType("message/rfc822");
+		
+		Intent intent;
+		if (attachments == null) {
+			intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("message/rfc822");
+		}
+		else {
+			intent = new Intent(Intent.ACTION_SEND_MULTIPLE);
+			intent.setType("message/rfc822");
+			intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, attachments);
+		}
+		
 		intent.putExtra(Intent.EXTRA_EMAIL, new String[] { emailAddress });
 		intent.putExtra(Intent.EXTRA_SUBJECT, subject);
 		intent.putExtra(Intent.EXTRA_TEXT, body);
+		
 		try {
 		    context.startActivity(Intent.createChooser(intent, subject));
 		} catch (ActivityNotFoundException e) {
