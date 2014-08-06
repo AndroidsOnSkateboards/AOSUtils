@@ -11,10 +11,14 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import org.aosutils.IoUtils;
 
@@ -28,23 +32,31 @@ public class HttpUtils {
 	}
 	
 	public static String get(String uri, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, false, null, httpTimeout, null);
+		return request(uri, headers, false, null, httpTimeout, null, false);
 	}
 	public static String post(String uri, Map<String, String> headers, String postData, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, true, postData, httpTimeout, null);
+		return request(uri, headers, true, postData, httpTimeout, null, false);
 	}
 	
-	public static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
-		InputStream inputStream = requestStream(uri, headers, post, postData, httpTimeout, proxy);
+	public static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
+		InputStream inputStream = requestStream(uri, headers, post, postData, httpTimeout, proxy, forceTrustSSLCert);
 		return IoUtils.getString(inputStream);
 	}
-	public static InputStream requestStream(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy) throws FileNotFoundException, MalformedURLException, IOException {
+	public static InputStream requestStream(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
 		URL url = new URL(uri);
 		URLConnection urlConnection = proxy == null ? url.openConnection() : url.openConnection(proxy);
 		
 		if (httpTimeout != null) {
 			urlConnection.setConnectTimeout(httpTimeout);
 			urlConnection.setReadTimeout(httpTimeout);
+		}
+		
+		if (forceTrustSSLCert == true && urlConnection instanceof HttpsURLConnection) {
+			try {
+				HttpsForceTrustCertManager.getInstance().forceTrustSSLCert( (HttpsURLConnection) urlConnection);
+			} catch (KeyManagementException | NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		if (headers == null) {
@@ -70,27 +82,36 @@ public class HttpUtils {
 			}
 		}
 		
+		InputStream resultStream = null;
+		IOException exception = null;
+		
 		try {
-			InputStream resultStream = urlConnection.getInputStream();
+			resultStream = urlConnection.getInputStream();
 			if ("gzip".equals(urlConnection.getContentEncoding())) {
 				resultStream = new GZIPInputStream(resultStream);
 			}
-			
-			return resultStream;
 		}
 		catch (IOException e) {
-			if (urlConnection instanceof HttpURLConnection) {
-				HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
-				if (httpConnection.getResponseCode() == 401) { // Unauthorized
-					throw new HTTPUnauthorizedException(e.getMessage());
-				}
-				else {
-					System.err.println("HTTP ResponseCode: " + httpConnection.getResponseCode());
-				}
-			}
-			
-			throw e;
+			exception = e;
 		}
+		
+		if (urlConnection instanceof HttpURLConnection) {
+			HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+			
+			int responseCode = httpConnection.getResponseCode();
+			
+			if (responseCode == 401) { // HTTP 401/Unauthorized, try to pass along message from exception
+				throw new HTTPUnauthorizedException(exception != null ? exception.getMessage() : httpConnection.getResponseMessage());
+			}
+			else if (exception != null) { // Any other exception
+				throw exception;
+			}
+			else if (responseCode >= 300) { // Bad HTTP response code, but no Exception (eg. HTTP 301/Moved Permanently)
+				throw new IOException("HTTP ResponseCode: " + responseCode + ", " + httpConnection.getResponseMessage());
+			}
+		}
+		
+		return resultStream;
 	}
 	
 	public static void sendToOutputStream(OutputStream outputStream, String output) throws IOException {
