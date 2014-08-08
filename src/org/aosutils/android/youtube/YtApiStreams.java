@@ -183,6 +183,7 @@ public class YtApiStreams {
 		for (String recommendedFormat : recommendedFormats) {
 			if (urls.containsKey(recommendedFormat)) {
 				streamResult.stream = urls.get(recommendedFormat);
+				break;
 			}
 		}
 		
