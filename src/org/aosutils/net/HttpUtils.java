@@ -4,8 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -78,7 +76,7 @@ public class HttpUtils {
 				    postData = new String(baos.toByteArray());
 				}
 			    
-				sendToOutputStream(urlConnection.getOutputStream(), postData);
+				IoUtils.sendToOutputStream(urlConnection.getOutputStream(), postData);
 			}
 		}
 		
@@ -112,12 +110,6 @@ public class HttpUtils {
 		}
 		
 		return resultStream;
-	}
-	
-	public static void sendToOutputStream(OutputStream outputStream, String output) throws IOException {
-		OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
-		writer.write(output);
-		writer.flush();
 	}
 	
 	public static String getPublicIpAddress(final Integer httpTimeout) {

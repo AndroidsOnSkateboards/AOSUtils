@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StringUtils {
 	public static String join(Collection<String> parts, String delimiter) {
@@ -25,6 +26,18 @@ public class StringUtils {
 		}
 		
 		return joined;
+	}
+	
+	public static String joinUrlArgs(Map<String, String> urlArgs) {
+		return joinAndUnmap(urlArgs, "=", "&");
+	}
+	
+	public static String joinAndUnmap(Map<String, String> map, String keyValueDelimiter, String itemDelimiter) {
+		ArrayList<String> items = new ArrayList<String>();
+		for (String key : map.keySet()) {
+			items.add(key + keyValueDelimiter + map.get(key));
+		}
+		return join(items, itemDelimiter);
 	}
 	
 	public static List<String> split(String inputString, String delimiter) {
