@@ -21,28 +21,36 @@ import javax.net.ssl.HttpsURLConnection;
 import org.aosutils.IoUtils;
 
 public class HttpUtils {
-	public static class HTTPUnauthorizedException extends IOException {
+	public static class HTTPException extends IOException {
+		private static final long serialVersionUID = -4486771807423795451L;
+		
+		public HTTPException(String message) {
+			super(message);
+		}
+	}
+	public static class HTTPUnauthorizedException extends HTTPException {
+		private static final long serialVersionUID = -58562254193206846L;
+		
 		public HTTPUnauthorizedException(String message) {
 			super(message);
 		}
-
-		private static final long serialVersionUID = -58562254193206846L;
 	}
 	
-	public static String get(String uri, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, false, null, httpTimeout, null, false);
+	public static String get(String url, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
+		return request(url, headers, null, httpTimeout, null, false);
 	}
-	public static String post(String uri, Map<String, String> headers, String postData, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
-		return request(uri, headers, true, postData, httpTimeout, null, false);
+	public static String post(String url, Map<String, String> headers, String postData, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
+		postData = (postData == null ? "" : postData);
+		return request(url, headers, postData, httpTimeout, null, false);
 	}
 	
-	public static String request(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
-		InputStream inputStream = requestStream(uri, headers, post, postData, httpTimeout, proxy, forceTrustSSLCert);
+	public static String request(String url, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
+		InputStream inputStream = requestStream(url, headers, postData, httpTimeout, proxy, forceTrustSSLCert);
 		return IoUtils.getString(inputStream);
 	}
-	public static InputStream requestStream(String uri, Map<String, String> headers, boolean post, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
-		URL url = new URL(uri);
-		URLConnection urlConnection = proxy == null ? url.openConnection() : url.openConnection(proxy);
+	public static InputStream requestStream(String url, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
+		URL urlObj = new URL(url);
+		URLConnection urlConnection = proxy == null ? urlObj.openConnection() : urlObj.openConnection(proxy);
 		
 		if (httpTimeout != null) {
 			urlConnection.setConnectTimeout(httpTimeout);
@@ -65,10 +73,10 @@ public class HttpUtils {
 			urlConnection.setRequestProperty(param, headers.get(param));
 		}
 		
-		if (post) {
+		if (postData != null) {
 			urlConnection.setDoOutput(true);
 			
-			if (postData != null) {
+			if (!postData.equals("")) {
 				if ("gzip".equals(headers.get("Content-Encoding"))) {
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					GZIPOutputStream gzos = new GZIPOutputStream(baos);
@@ -105,7 +113,7 @@ public class HttpUtils {
 				throw exception;
 			}
 			else if (responseCode >= 300) { // Bad HTTP response code, but no Exception (eg. HTTP 301/Moved Permanently)
-				throw new IOException("HTTP ResponseCode: " + responseCode + ", " + httpConnection.getResponseMessage());
+				throw new HTTPException("HTTP ResponseCode: " + responseCode + ", " + httpConnection.getResponseMessage());
 			}
 		}
 		
