@@ -205,7 +205,7 @@ public class YtApiStreams {
 		// Android 2.1 and lower fail on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
 		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
 		
-		return HttpUtils.request(uri, headers, false, null, _YtApiConstants.HttpTimeout, null, forceTrustSSLCert);
+		return HttpUtils.request(uri, headers, null, _YtApiConstants.HttpTimeout, null, forceTrustSSLCert);
 	}
 	
 	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
