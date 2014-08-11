@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.StringUtils;
-import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.net.HttpUtils;
 
 import android.text.TextUtils;
@@ -28,9 +28,9 @@ public class YtApiSignature {
 	
 	public static String requestCurrentAlgorithm() throws FileNotFoundException, MalformedURLException, IOException {
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
+		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
-		String homepage = HttpUtils.get("http://www.youtube.com", headers, _YtApiConstants.HttpTimeout);
+		String homepage = HttpUtils.get("http://www.youtube.com", headers, _YtApiConstants.HTTP_TIMEOUT);
 		
 		return requestCurrentAlgorithm(homepage);
 	}
@@ -97,7 +97,7 @@ public class YtApiSignature {
 	}
 	
 	private static String requestCurrentAlgorithmFromHtml5PlayerUrl(String html5PlayerUrl) throws IOException {
-		String playerJsSrc = HttpUtils.get(html5PlayerUrl, null, _YtApiConstants.HttpTimeout);
+		String playerJsSrc = HttpUtils.get(html5PlayerUrl, null, _YtApiConstants.HTTP_TIMEOUT);
 		return getAlgorithmFromHtml5PlayerJsSrc(playerJsSrc);
 	}
 		

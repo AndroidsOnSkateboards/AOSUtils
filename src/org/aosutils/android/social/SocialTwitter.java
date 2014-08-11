@@ -14,6 +14,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.android.loadingtask.LoadingTask;
@@ -40,7 +41,7 @@ public class SocialTwitter {
 	}
 	
 	private static final int HTTP_TIMEOUT = 5000;
-	private static final String CHARACTER_ENCODING = "UTF-8";
+	private static final String CHARACTER_ENCODING = AOSConstants.CHARACTER_ENCODING;
 	
 	private static final String OAUTH_RETURN_REQUEST_TOKEN = "oauth_token";
 	private static final String OAUTH_RETURN_REQUEST_VERIFIER = "oauth_verifier";
@@ -283,7 +284,7 @@ public class SocialTwitter {
 		String response;
 		
 		public TwitterTask(Activity activity) {
-			super(activity, R.string.dialog_Loading);
+			super(activity);
 		}
 
 		@Override

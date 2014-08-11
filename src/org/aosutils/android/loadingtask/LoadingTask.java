@@ -1,6 +1,7 @@
 package org.aosutils.android.loadingtask;
 
 import org.aosutils.android.AOSUtilsCommon;
+import org.aosutils.android.R;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -11,6 +12,9 @@ public abstract class LoadingTask<A, B, C> extends AsyncTask<Object, Object, Obj
 	private Activity loadingTaskActivity;
 	private int loadingTextResId;
 	
+	public LoadingTask(Activity loadingTaskActivity) {
+		this(loadingTaskActivity, R.string.dialog_Loading);
+	}
 	public LoadingTask(Activity loadingTaskActivity, int loadingTextResId) {
 		this.loadingTaskActivity = loadingTaskActivity;
 		this.loadingTextResId = loadingTextResId;

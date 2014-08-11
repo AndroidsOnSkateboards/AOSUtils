@@ -7,6 +7,7 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.net.HttpUtils;
@@ -200,12 +201,12 @@ public class YtApiStreams {
 	public static String getDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
 		String uri = "https://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("User-Agent", AOSUtilsCommon.USER_AGENT_DESKTOP);
+		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
 		// Android 2.1 and lower fail on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
 		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
 		
-		return HttpUtils.request(uri, headers, null, _YtApiConstants.HttpTimeout, null, forceTrustSSLCert);
+		return HttpUtils.request(uri, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
 	}
 	
 	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
@@ -236,7 +237,7 @@ public class YtApiStreams {
 	
 	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
 		String uri = "http://www.youtube.com/get_video_info?&video_id=" + videoId;
-		String page = HttpUtils.get(uri, null, _YtApiConstants.HttpTimeout);
+		String page = HttpUtils.get(uri, null, _YtApiConstants.HTTP_TIMEOUT);
 		
 		// This page doesn't contain algorithm info, so load it from preferences
 		String algorithm = AlgorithmPreference.get(context).algorithm;
@@ -256,7 +257,7 @@ public class YtApiStreams {
 					end = page.length();
 				}
 				
-				String urlEncodedFmtStreamMap = URLDecoder.decode(page.substring(begin, end), _YtApiConstants.CharacterEncoding);
+				String urlEncodedFmtStreamMap = URLDecoder.decode(page.substring(begin, end), _YtApiConstants.CHARACTER_ENCODING);
 				formats.putAll(parseUrls(urlEncodedFmtStreamMap, algorithm));
 			}
 		}
@@ -335,7 +336,7 @@ public class YtApiStreams {
 			for (String set : params) {
 				String[] setParts = TextUtils.split(set, "=");
 				String key = setParts[0].replace("u0026", "");
-				String value = URLDecoder.decode(setParts[1], _YtApiConstants.CharacterEncoding);
+				String value = URLDecoder.decode(setParts[1], _YtApiConstants.CHARACTER_ENCODING);
 				
 				paramMap.put(key, value);
 			}
