@@ -20,22 +20,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.aosutils.IoUtils;
 
-public class HttpUtils {
-	public static class HTTPException extends IOException {
-		private static final long serialVersionUID = -4486771807423795451L;
-		
-		public HTTPException(String message) {
-			super(message);
-		}
-	}
-	public static class HTTPUnauthorizedException extends HTTPException {
-		private static final long serialVersionUID = -58562254193206846L;
-		
-		public HTTPUnauthorizedException(String message) {
-			super(message);
-		}
-	}
-	
+public class HttpUtils {	
 	public static String get(String url, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
 		return request(url, headers, null, httpTimeout, null, false);
 	}
@@ -88,36 +73,33 @@ public class HttpUtils {
 			}
 		}
 		
-		InputStream resultStream = null;
-		IOException exception = null;
-		
-		try {
-			resultStream = urlConnection.getInputStream();
-			if ("gzip".equals(urlConnection.getContentEncoding())) {
-				resultStream = new GZIPInputStream(resultStream);
-			}
-		}
-		catch (IOException e) {
-			exception = e;
-		}
-		
 		if (urlConnection instanceof HttpURLConnection) {
 			HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
 			
-			int responseCode = httpConnection.getResponseCode();
+			int statusCode = httpConnection.getResponseCode();
 			
-			if (responseCode == 401) { // HTTP 401/Unauthorized, try to pass along message from exception
-				throw new HTTPUnauthorizedException(exception != null ? exception.getMessage() : httpConnection.getResponseMessage());
-			}
-			else if (exception != null) { // Any other exception
-				throw exception;
-			}
-			else if (responseCode >= 300) { // Bad HTTP response code, but no Exception (eg. HTTP 301/Moved Permanently)
-				throw new HTTPException("HTTP ResponseCode: " + responseCode + ", " + httpConnection.getResponseMessage());
+			if (statusCode >= 300) { // Bad HTTP status code
+				String response = null;
+				try {
+					InputStream errorStream = gUnzip(httpConnection.getErrorStream(), urlConnection);
+					response = IoUtils.getString(errorStream);
+				}
+				catch (Exception e) {
+				}
+				
+				throw new HttpStatusCodeException(statusCode, httpConnection.getResponseMessage(), response, null);
 			}
 		}
 		
-		return resultStream;
+		// This may throw a new IOException
+		return gUnzip(urlConnection.getInputStream(), urlConnection);
+	}
+	
+	private static InputStream gUnzip(InputStream inputStream, URLConnection urlConnection) throws IOException {
+		if ("gzip".equals(urlConnection.getContentEncoding())) {
+			inputStream = new GZIPInputStream(inputStream);
+		}
+		return inputStream;
 	}
 	
 	public static String getPublicIpAddress(final Integer httpTimeout) {
