@@ -7,8 +7,8 @@ import java.util.Map;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.android.loadingtask.LoadingTask;
+import org.aosutils.net.HttpStatusCodeException;
 import org.aosutils.net.HttpUtils;
-import org.aosutils.net.HttpUtils.HTTPUnauthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -72,22 +72,23 @@ public class SocialFacebook {
 					login(getActivity());
 				}
 				else {
-					try {
-						post(pendingPost, getActivity());
-						pendingPost = null;
-						
-						if (onSuccessfulPost != null) {
-							onSuccessfulPost.run();
-							onSuccessfulPost = null;
-						}
-					} catch (HTTPUnauthorizedException e) {
-						login(getActivity());
-						e.printStackTrace();
+					post(pendingPost, getActivity());
+					pendingPost = null;
+					
+					if (onSuccessfulPost != null) {
+						onSuccessfulPost.run();
+						onSuccessfulPost = null;
 					}
 				}
 				
 			} catch (IOException e) {
-				alertOnUi(getActivity().getString(R.string.error_Connection));
+				if (HttpStatusCodeException.isUnauthorized(e)) {
+					login(getActivity());
+				}
+				else {
+					alertOnUi(getActivity().getString(R.string.error_Connection));
+				}
+				
 				e.printStackTrace();
 			}
 			return null;

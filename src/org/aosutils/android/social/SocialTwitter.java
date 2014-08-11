@@ -18,8 +18,8 @@ import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.android.loadingtask.LoadingTask;
 import org.aosutils.android.loadingtask.LoadingTaskActivity;
+import org.aosutils.net.HttpStatusCodeException;
 import org.aosutils.net.HttpUtils;
-import org.aosutils.net.HttpUtils.HTTPUnauthorizedException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -210,7 +210,7 @@ public class SocialTwitter {
 
 		@Override
 		protected void onPostFail(Exception e) {
-			if (e instanceof HTTPUnauthorizedException) {
+			if (HttpStatusCodeException.isUnauthorized(e)) {
 				// Get a new access token
 				getRequestToken(getActivity());
 			}
@@ -324,7 +324,8 @@ public class SocialTwitter {
 		
 		protected void onPostFail(Exception e) {
 			int messageResourceId = unknownErrorResourceId();
-			if (e instanceof IOException && !(e instanceof HTTPUnauthorizedException)) {
+			
+			if (e instanceof IOException && !HttpStatusCodeException.isUnauthorized(e)) {
 				messageResourceId = R.string.error_Connection;
 			}
 			
@@ -339,7 +340,7 @@ public class SocialTwitter {
 	}
 	
 	
-	private String postToApi(String url, Map<String, String> authHeaderParams, Map<String, String> bodyParams, String signingKey) throws HTTPUnauthorizedException, IOException, Exception {
+	private String postToApi(String url, Map<String, String> authHeaderParams, Map<String, String> bodyParams, String signingKey) throws GeneralSecurityException, IOException {
 		String uri = url.contains("?") ? url.substring(0, url.indexOf("?")) : url;
 		String oauth_nonce = UUID.randomUUID().toString().replace("-", "");
 		String oauth_signature_method = "HMAC-SHA1";
