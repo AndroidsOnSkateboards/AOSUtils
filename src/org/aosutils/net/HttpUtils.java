@@ -18,6 +18,7 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
 
 public class HttpUtils {	
@@ -65,7 +66,7 @@ public class HttpUtils {
 				if ("gzip".equals(headers.get("Content-Encoding"))) {
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					GZIPOutputStream gzos = new GZIPOutputStream(baos);
-				    gzos.write(postData.getBytes("UTF-8"));
+				    gzos.write(postData.getBytes(AOSConstants.CHARACTER_ENCODING));
 				    postData = new String(baos.toByteArray());
 				}
 			    

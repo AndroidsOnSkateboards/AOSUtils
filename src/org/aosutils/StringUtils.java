@@ -1,8 +1,11 @@
 package org.aosutils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,13 +32,29 @@ public class StringUtils {
 	}
 	
 	public static String joinUrlArgs(Map<String, String> urlArgs) {
-		return joinAndUnmap(urlArgs, "=", "&");
+		Map<String, String> urlEncodedArgs = new LinkedHashMap<String, String>(); 
+		for (String key : urlArgs.keySet()) {
+			String value = urlArgs.get(key);
+			
+			try {
+				key = URLEncoder.encode(key, AOSConstants.CHARACTER_ENCODING);
+				value = URLEncoder.encode(value, AOSConstants.CHARACTER_ENCODING);
+			}
+			catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			
+			urlEncodedArgs.put(key, value);
+		}
+		
+		return joinAndUnmap(urlEncodedArgs, "=", "&");
 	}
 	
 	public static String joinAndUnmap(Map<String, String> map, String keyValueDelimiter, String itemDelimiter) {
 		ArrayList<String> items = new ArrayList<String>();
 		for (String key : map.keySet()) {
-			items.add(key + keyValueDelimiter + map.get(key));
+			String value = map.get(key);
+			items.add(key + keyValueDelimiter + value);
 		}
 		return join(items, itemDelimiter);
 	}
@@ -54,8 +73,8 @@ public class StringUtils {
 		return parts;
 	}
 	
-	public static HashMap<String, String> splitAndMap(String inputString, String splitDelimiter, String mapDelimiter) {
-		HashMap<String, String> map = new HashMap<String, String>();
+	public static LinkedHashMap<String, String> splitAndMap(String inputString, String splitDelimiter, String mapDelimiter) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 		
 		for (String part : split(inputString, splitDelimiter)) {
 			String key = part.substring(0, part.indexOf(mapDelimiter));
@@ -66,8 +85,25 @@ public class StringUtils {
 		return map;
 	}
 	
-	public static HashMap<String, String> parseUrlArgs(String url) {
-		return splitAndMap(url.substring(url.indexOf("?")+1), "&", "=");
+	public static LinkedHashMap<String, String> parseUrlArgs(String url) {
+		LinkedHashMap<String, String> urlArgs = splitAndMap(url.substring(url.indexOf("?")+1), "&", "=");
+		LinkedHashMap<String, String> urlDecodedArgs = new LinkedHashMap<String, String>();
+		
+		for (String key : urlArgs.keySet()) {
+			String value = urlArgs.get(key);
+			
+			try {
+				key = URLDecoder.decode(key, AOSConstants.CHARACTER_ENCODING);
+				value = URLDecoder.decode(value, AOSConstants.CHARACTER_ENCODING);
+			}
+			catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+			
+			urlDecodedArgs.put(key, value);
+		}
+		
+		return urlDecodedArgs;
 	}
 	
 	public static String padLeft(String s, int spaces) {
@@ -76,6 +112,16 @@ public class StringUtils {
 	
 	public static String padRight(String s, int spaces) {
 		return String.format("%1$-" + spaces + "s", s);
+	}
+	
+	public static String trim(String string, String trim) {
+		while (string.startsWith(trim)) {
+			string = string.substring(trim.length());
+		}
+		while (string.endsWith(trim)) {
+			string = string.substring(0, string.length() - trim.length());
+		}
+		return string;
 	}
 	
 	public static String toTitleCase(String str) {

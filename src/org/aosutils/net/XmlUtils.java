@@ -15,6 +15,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -99,7 +100,7 @@ public class XmlUtils {
 		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 	    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-	    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+	    transformer.setOutputProperty(OutputKeys.ENCODING, AOSConstants.CHARACTER_ENCODING);
 	    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 	    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 	    

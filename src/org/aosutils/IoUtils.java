@@ -30,6 +30,12 @@ public class IoUtils {
 	public static String getString(InputStream inputStream) throws IOException {
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 		
+		// Remove beginning UTF-8 byte order mark (BOM)
+		bufferedReader.mark(1);
+		if (bufferedReader.read() != 0xFEFF) {
+			bufferedReader.reset();
+		}
+		
 		StringBuilder stringBuilder = new StringBuilder();
 		String line = bufferedReader.readLine();
 		while (line != null) {
@@ -43,7 +49,7 @@ public class IoUtils {
 	}
 	
 	public static void sendToOutputStream(OutputStream outputStream, String output) throws IOException {
-		OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
+		OutputStreamWriter writer = new OutputStreamWriter(outputStream, AOSConstants.CHARACTER_ENCODING);
 		writer.write(output);
 		writer.flush();
 	}
