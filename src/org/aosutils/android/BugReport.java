@@ -121,7 +121,7 @@ public class BugReport {
 		body += "System info: " + "\n";
 		body += "-------------" + "\n";
 		body += "App Version: " + String.format("%s %s (%s)", AOSUtilsCommon.getAppName(context), AOSUtilsCommon.getAppVersionName(context), AOSUtilsCommon.getAppVersionCode(context)) + "\n";
-		body += "System Language: " + Locale.getDefault().toString() + " / " + Locale.getDefault().getDisplayLanguage() + "\n";
+		body += "System Language: " + Locale.getDefault().toString() + " / " + Locale.getDefault().getDisplayLanguage(Locale.US) + "\n";
 		body += "Device Manufacturer: " + (Build.MANUFACTURER.equals(Build.BRAND) ? Build.MANUFACTURER : String.format("%s / %s", Build.MANUFACTURER, Build.BRAND)) + "\n";
 		body += "Model: " + Build.MODEL + "\n";
 		body += "Device: " + (Build.DEVICE.equals(Build.PRODUCT) ? Build.DEVICE : String.format("%s / %s", Build.DEVICE, Build.PRODUCT)) + "\n";
@@ -134,7 +134,7 @@ public class BugReport {
 			
 			body += "Wifi: " + AOSUtilsCommon.isOnWifi(context) + "\n";
 			body += "Phone Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getPhoneType()), getTelephonyManagerDescription("PHONE_TYPE_", lTelephonyManager.getPhoneType()))) + "\n";
-			body += "Network Operator: " + (lTelephonyManager == null || lTelephonyManager.getNetworkCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getNetworkOperatorName(), lTelephonyManager.getNetworkCountryIso(), new Locale("", lTelephonyManager.getNetworkCountryIso()).getDisplayName())) + "\n";
+			body += "Network Operator: " + (lTelephonyManager == null || lTelephonyManager.getNetworkCountryIso().equals("") ? "null" : String.format("%s - %s (%s)", lTelephonyManager.getNetworkOperatorName(), lTelephonyManager.getNetworkCountryIso(), new Locale("", lTelephonyManager.getNetworkCountryIso()).getDisplayName(Locale.US))) + "\n";
 			body += "Network Type: " + (lTelephonyManager == null ? "null" : String.format("%s (%s)", Integer.toString(lTelephonyManager.getNetworkType()), getTelephonyManagerDescription("NETWORK_TYPE_", lTelephonyManager.getNetworkType()))) + "\n";
 			body += "Public IP Address: " + publicIpAddress + "\n";
 		}

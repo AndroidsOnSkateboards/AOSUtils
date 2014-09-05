@@ -12,6 +12,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.wifi.WifiManager;
+import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.View;
@@ -62,6 +63,16 @@ public class AOSUtilsCommon {
 	
 	public static SharedPreferences getDefaultSharedPreferences(Context context) {
 		return PreferenceManager.getDefaultSharedPreferences(context);
+	}
+	
+	public static long getAvailableMb(String path) {
+		final long SIZE_KB = 1024L;
+		final long SIZE_MB = SIZE_KB * SIZE_KB;
+		long availableSpace = -1L;
+		StatFs stat = new StatFs(path);
+		availableSpace = (long) stat.getAvailableBlocks() * (long) stat.getBlockSize();
+		
+		return availableSpace / SIZE_MB;
 	}
 	
 	public static void showKeyboard(EditText editText) {
