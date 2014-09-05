@@ -1,8 +1,10 @@
 package org.aosutils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,6 +27,51 @@ public class IoUtils {
 		PrintWriter writer = new PrintWriter(filename);
 		writer.write(data);
 		writer.close();
+	}
+	
+	public static void copyFile(String source, String destination) throws IOException {
+		FileInputStream inputStream = new FileInputStream(source);
+		writeFile(destination, inputStream, null);
+	}
+	
+	public static void writeFile(String filename, InputStream inputStream, WriteFileMonitor monitor) throws IOException {
+		if (monitor == null) {
+			// To avoid NULL exceptions, but the calling function will not have access to this monitor
+			monitor = new WriteFileMonitor();
+		}
+		
+		byte[] buffer = new byte[1024];
+		OutputStream outputStream = new FileOutputStream(filename);
+		
+		int bytesRead;
+        while(!monitor.isCancelled() && (bytesRead = inputStream.read(buffer)) != -1) {
+        	outputStream.write(buffer, 0, bytesRead);
+        	monitor.bytes += bytesRead;
+        }
+		
+        inputStream.close();
+        outputStream.flush();
+        outputStream.close();
+        
+        if (monitor.isCancelled) {
+        	new File(filename).delete();
+        }
+	}
+	
+	public static class WriteFileMonitor {
+		private int bytes = 0;
+		private boolean isCancelled = false;
+		
+		public int getBytes() {
+			return this.bytes;
+		}
+		
+		public void cancel() {
+			this.isCancelled = true;
+		}
+		public boolean isCancelled() {
+			return this.isCancelled;
+		}
 	}
 	
 	public static String getString(InputStream inputStream) throws IOException {

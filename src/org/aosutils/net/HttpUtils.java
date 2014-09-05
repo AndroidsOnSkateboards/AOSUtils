@@ -20,6 +20,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
+import org.aosutils.IoUtils.WriteFileMonitor;
 
 public class HttpUtils {	
 	public static String get(String url, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
@@ -31,10 +32,11 @@ public class HttpUtils {
 	}
 	
 	public static String request(String url, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
-		InputStream inputStream = requestStream(url, headers, postData, httpTimeout, proxy, forceTrustSSLCert);
+		InputStream inputStream = getStream(requestConnection(url, headers, postData, httpTimeout, proxy, forceTrustSSLCert));
 		return IoUtils.getString(inputStream);
 	}
-	public static InputStream requestStream(String url, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
+	
+	public static URLConnection requestConnection(String url, Map<String, String> headers, String postData, Integer httpTimeout, Proxy proxy, boolean forceTrustSSLCert) throws FileNotFoundException, MalformedURLException, IOException {
 		URL urlObj = new URL(url);
 		URLConnection urlConnection = proxy == null ? urlObj.openConnection() : urlObj.openConnection(proxy);
 		
@@ -74,6 +76,65 @@ public class HttpUtils {
 			}
 		}
 		
+		return urlConnection;
+	}
+	
+	public static class DownloadMonitor extends WriteFileMonitor {
+		private int bytesTotal;
+		private Thread thread;
+		private IOException ioException;
+		
+		public DownloadMonitor(int totalBytes) {
+			this.bytesTotal = totalBytes;
+		}
+		
+		public int getBytesTotal() {
+			return this.bytesTotal;
+		}
+		
+		public Thread getThread() {
+			return this.thread;
+		}
+		public IOException getException() {
+			return this.ioException;
+		}
+	}
+	
+	/* 
+	 * If running in a separate thread, you must manually check for an IOException
+	 */
+	public static DownloadMonitor download(final String filename, URLConnection urlConnection, boolean runInSeparateThread) throws IOException {
+		final DownloadMonitor downloadMonitor = new DownloadMonitor(urlConnection.getContentLength());
+		final InputStream inputStream = getStream(urlConnection);
+		
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					IoUtils.writeFile(filename, inputStream, downloadMonitor);
+				} catch (IOException e) {
+					downloadMonitor.ioException = e;
+				}
+			}
+		};
+		
+		if (runInSeparateThread) {
+			Thread thread = new Thread(runnable);
+			downloadMonitor.thread = thread;
+			thread.start();
+		}
+		else {
+			runnable.run();
+			
+			if (downloadMonitor.ioException != null) {
+				throw downloadMonitor.ioException;
+			}
+		}
+		
+		return downloadMonitor;
+	}
+	
+	public static InputStream getStream(URLConnection urlConnection) throws HttpStatusCodeException, IOException {
 		if (urlConnection instanceof HttpURLConnection) {
 			HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
 			
