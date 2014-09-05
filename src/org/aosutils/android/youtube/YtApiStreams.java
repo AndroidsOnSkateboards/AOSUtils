@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import org.aosutils.AOSConstants;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
+import org.aosutils.net.HttpStatusCodeException;
 import org.aosutils.net.HttpUtils;
 
 import android.content.Context;
@@ -199,14 +200,41 @@ public class YtApiStreams {
 	}
 	
 	public static String getDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
-		String uri = "https://www.youtube.com/watch?v=" + videoId;
+		// Android < 2.2 fails on YouTube's HTTPS desktop site (doesn't trust the SSL cert)
+		// Android < 3.2 fails on MediaPlayer playing https URL's, which is what SSL desktop site returns
+		
+		String protocol = mediaPlayerSupportsHttps() ? "https" : "http";
+		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
 		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
-		// Android 2.1 and lower fail on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
-		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
+		// Android < 2.2 fails on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
+		//boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
 		
-		return HttpUtils.request(uri, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
+		int tries = 6;
+		IOException exception = null;
+		
+		for (int i=0; i<tries; i++) {
+			try {
+				return HttpUtils.get(url, headers, _YtApiConstants.HTTP_TIMEOUT);
+			}
+			catch (IOException e) {
+				exception = e;
+				if (e instanceof HttpStatusCodeException && ((HttpStatusCodeException) e).getStatusCode() == 301) { // YouTube is trying to redirect to HTTPS
+					// Retry
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+				}
+				else {
+					break;
+				}
+			}
+		}
+		
+		throw exception;
 	}
 	
 	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
@@ -263,6 +291,10 @@ public class YtApiStreams {
 		}
 		
 		return formats;
+	}
+	
+	public static boolean mediaPlayerSupportsHttps() { // Android 3.1 or greater
+		return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB_MR1;
 	}
 	
 	private static String getOrUpdateAlgorithm(String youtubePageSource, Context context) {
