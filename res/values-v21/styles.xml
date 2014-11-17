@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
-		Styles for API 11+. This completely replaces styles from res/values/styles.xml on API 11+ devices.
+		Styles for API 21+. This completely replaces styles from res/values/styles.xml on API 21+ devices.
     -->
-    <style name="Theme.Dialog" parent="android:Theme.Holo.Dialog">
+    <style name="Theme.Dialog" parent="android:Theme.Material.Dialog">
         <item name="clickableItemBackground">?android:attr/selectableItemBackground</item>
     </style>
 </resources>
