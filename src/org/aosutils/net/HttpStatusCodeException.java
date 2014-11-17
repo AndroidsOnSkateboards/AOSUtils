@@ -9,8 +9,8 @@ public class HttpStatusCodeException extends IOException {
 	private String statusMessage;
 	private String response;
 	
-	public HttpStatusCodeException(int statusCode, String statusMessage, String response, Throwable cause) {
-		super("HTTP " + statusCode + ": " + statusMessage + (response == null ? "" : ", " + response), cause);
+	public HttpStatusCodeException(int statusCode, String statusMessage, String response) {
+		super("HTTP " + statusCode + appendToStatusCode(getCombinedMessage(statusMessage, response)));
 		this.statusCode = statusCode;
 		this.statusMessage = statusMessage;
 		this.response = response;
@@ -30,5 +30,24 @@ public class HttpStatusCodeException extends IOException {
 	
 	public String getResponse() {
 		return this.response;
+	}
+	
+	private static String getCombinedMessage(String statusMessage, String response) {
+		if (statusMessage == null && response == null) {
+			return null;
+		}
+		else if (statusMessage == null || (response != null && response.startsWith(statusMessage))) {
+			return response;
+		}
+		else if (response == null) {
+			return statusMessage;
+		}
+		else {
+			return statusMessage + ", " + response;
+		}
+	}
+	
+	private static String appendToStatusCode(String combinedMessage) {
+		return combinedMessage == null ? "" : ": " + combinedMessage;
 	}
 }

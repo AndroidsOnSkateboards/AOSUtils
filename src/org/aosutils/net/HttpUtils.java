@@ -84,8 +84,8 @@ public class HttpUtils {
 		private Thread thread;
 		private IOException ioException;
 		
-		public DownloadMonitor(int totalBytes) {
-			this.bytesTotal = totalBytes;
+		public DownloadMonitor(int bytesTotal) {
+			this.bytesTotal = bytesTotal;
 		}
 		
 		public int getBytesTotal() {
@@ -103,7 +103,7 @@ public class HttpUtils {
 	/* 
 	 * If running in a separate thread, you must manually check for an IOException
 	 */
-	public static DownloadMonitor download(final String filename, URLConnection urlConnection, boolean runInSeparateThread) throws IOException {
+	public static DownloadMonitor download(URLConnection urlConnection, final String localFilename, boolean runInSeparateThread) throws IOException {
 		final DownloadMonitor downloadMonitor = new DownloadMonitor(urlConnection.getContentLength());
 		final InputStream inputStream = getStream(urlConnection);
 		
@@ -111,7 +111,7 @@ public class HttpUtils {
 			@Override
 			public void run() {
 				try {
-					IoUtils.writeFile(filename, inputStream, downloadMonitor);
+					IoUtils.writeFile(localFilename, inputStream, downloadMonitor);
 				} catch (IOException e) {
 					downloadMonitor.ioException = e;
 				}
@@ -149,7 +149,7 @@ public class HttpUtils {
 				catch (Exception e) {
 				}
 				
-				throw new HttpStatusCodeException(statusCode, httpConnection.getResponseMessage(), response, null);
+				throw new HttpStatusCodeException(statusCode, httpConnection.getResponseMessage(), response);
 			}
 		}
 		
