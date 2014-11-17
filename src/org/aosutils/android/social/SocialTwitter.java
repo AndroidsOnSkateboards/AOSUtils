@@ -15,6 +15,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.aosutils.AOSConstants;
+import org.aosutils.Base64;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.android.loadingtask.LoadingTask;
@@ -25,7 +26,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.backported.Base64;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
 import android.net.Uri;
