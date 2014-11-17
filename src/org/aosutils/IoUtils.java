@@ -33,6 +33,10 @@ public class IoUtils {
 		FileInputStream inputStream = new FileInputStream(source);
 		writeFile(destination, inputStream, null);
 	}
+
+	public static void moveFile(String source, String destination) throws IOException {
+		new File(source).renameTo(new File(destination));
+	}
 	
 	public static void writeFile(String filename, InputStream inputStream, WriteFileMonitor monitor) throws IOException {
 		if (monitor == null) {
@@ -41,6 +45,7 @@ public class IoUtils {
 		}
 		
 		byte[] buffer = new byte[1024];
+		new File(filename).getParentFile().mkdirs();
 		OutputStream outputStream = new FileOutputStream(filename);
 		
 		int bytesRead;
