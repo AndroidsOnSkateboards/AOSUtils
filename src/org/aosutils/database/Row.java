@@ -1,5 +1,6 @@
 package org.aosutils.database;
 
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,12 +15,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import org.aosutils.StringUtils;
 import org.aosutils.database.Clause.AbstractClause;
 import org.aosutils.database.Clause.GreaterThan;
-import org.aosutils.database.Clause.GreaterThanOrEqual;
+import org.aosutils.database.Clause.GreaterThanOrEqualTo;
 import org.aosutils.database.Clause.LessThan;
-import org.aosutils.database.Clause.LessThanOrEqual;
+import org.aosutils.database.Clause.LessThanOrEqualTo;
 import org.aosutils.database.Clause.NotEqualTo;
 
 public abstract class Row {
@@ -69,9 +72,9 @@ public abstract class Row {
 				
 				Condition condition = 
 					value instanceof LessThan ? Condition.LESS_THAN :
-					value instanceof LessThanOrEqual ? Condition.LESS_THAN_OR_EQUAL :
+					value instanceof LessThanOrEqualTo ? Condition.LESS_THAN_OR_EQUAL :
 					value instanceof GreaterThan ? Condition.GREATER_THAN :
-					value instanceof GreaterThanOrEqual ? Condition.GREATER_THAN_OR_EQUAL :
+					value instanceof GreaterThanOrEqualTo ? Condition.GREATER_THAN_OR_EQUAL :
 					value instanceof NotEqualTo ? Condition.NOT_EQUAL :
 					value instanceof AbstractClause ? null :
 						Condition.EQUAL;
@@ -374,6 +377,10 @@ public abstract class Row {
 			}
 			else if (value instanceof Enum) {
 				preparedStatement.setString(parameterIndex, ""+value);
+			}
+			else if (value instanceof byte[] || value instanceof Blob) {
+				Blob blob = value instanceof Blob ? (Blob) value : new SerialBlob((byte[]) value);
+				preparedStatement.setBlob(parameterIndex, blob);
 			}
 			else {
 				throw new SQLException("Unknown DB field type for: " + value.getClass().getName() + ", please map it correctly in " + Row.class.getName());

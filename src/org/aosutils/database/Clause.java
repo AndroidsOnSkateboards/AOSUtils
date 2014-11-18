@@ -18,8 +18,8 @@ public class Clause {
 			super(object);
 		}
 	}
-	public static class LessThanOrEqual extends AbstractClause {
-		public LessThanOrEqual(Object object) {
+	public static class LessThanOrEqualTo extends AbstractClause {
+		public LessThanOrEqualTo(Object object) {
 			super(object);
 		}
 	}
@@ -28,8 +28,8 @@ public class Clause {
 			super(object);
 		}
 	}
-	public static class GreaterThanOrEqual extends AbstractClause {
-		public GreaterThanOrEqual(Object object) {
+	public static class GreaterThanOrEqualTo extends AbstractClause {
+		public GreaterThanOrEqualTo(Object object) {
 			super(object);
 		}
 	}
