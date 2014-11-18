@@ -49,7 +49,7 @@ public class YtApiStreams {
 	}
 	
 	public static class StreamResult {
-		public String stream;
+		public String streamUrl;
 		public Exception desktopSiteException;
 	}
 	
@@ -184,15 +184,15 @@ public class YtApiStreams {
 		
 		for (String recommendedFormat : recommendedFormats) {
 			if (urls.containsKey(recommendedFormat)) {
-				streamResult.stream = urls.get(recommendedFormat);
+				streamResult.streamUrl = urls.get(recommendedFormat);
 				break;
 			}
 		}
 		
 		// Recommended format wasn't found, look for any format
-		if (streamResult.stream == null && urls.size() > 0) {
+		if (streamResult.streamUrl == null && urls.size() > 0) {
 			// Generally sorted by highest format first
-			streamResult.stream = urls.get(0);
+			streamResult.streamUrl = urls.get(0);
 		}
 		
 		// Finally, give up

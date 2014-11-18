@@ -99,9 +99,9 @@ public class BugReport {
 			
 			String translatedIssue = (String) result;
 			String bodyText = issue;
-			if (translatedIssue != null) {
-				bodyText += "\n\n" + "English:" + "\n" + translatedIssue;
-			}
+			
+			bodyText += "\n\n" + "English:" + "\n";
+			bodyText += translatedIssue == null ? "(problem with translation)" : translatedIssue;
 			
 			submitBugReport(subject, toEmailAddress, bodyText, attachments, includeNetworkInfo, publicIpAddress, getActivity());
 		}
