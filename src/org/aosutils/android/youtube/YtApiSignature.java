@@ -159,7 +159,7 @@ public class YtApiSignature {
 			String functionVar = functionName.substring(0, functionName.indexOf("."));
 			String function = functionName.substring(functionName.indexOf(".")+1);
 			
-			regex = "var " + functionVar.replace("$", "\\$") + "=\\{.*?" + function + ":function\\(.*?\\)\\{(.*?)\\}";
+			regex = "var " + Pattern.quote(functionVar) + "=\\{.*?" + function + ":function\\(.*?\\)\\{(.*?)\\}";
 		}
 		else {
 			regex = "function " + Pattern.quote(functionName) + "\\(.+?\\)\\{(.+?)\\}";
