@@ -4,19 +4,19 @@ import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerException;
 
 import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
+import org.aosutils.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -25,11 +25,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import android.backported.xml.DOMSource;
-import android.backported.xml.StreamResult;
-import android.backported.xml.Transformer;
-import android.backported.xml.TransformerFactory;
-
 public class XmlUtils {
 	public static Document newDocument() throws ParserConfigurationException {
 		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -37,9 +32,13 @@ public class XmlUtils {
 		return docBuilder.newDocument();
 	}
 	public static void addTextElement(String name, String value, Element parent) {
-		Element element = parent.getOwnerDocument().createElement(name);
-		element.appendChild(parent.getOwnerDocument().createTextNode(value));
+		Element element = createTextElement(name, value, parent.getOwnerDocument());
 		parent.appendChild(element);
+	}
+	private static Element createTextElement(String name, String value, Document document) {
+		Element element = document.createElement(name);
+		element.appendChild(document.createTextNode(value));
+		return element;
 	}
 	public static String getTextElementValue(String elementName, Element parentElement, boolean showEmptyAsNull) {
 		ArrayList<Node> childNodesWithTagName = getChildNodesWithTagName(elementName, parentElement);
@@ -97,6 +96,7 @@ public class XmlUtils {
 	}
 	
 	public static String toString(Document xml) throws IOException, TransformerException {
+		/*
 		Transformer transformer = TransformerFactory.newInstance().newTransformer();
 	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 	    transformer.setOutputProperty(OutputKeys.METHOD, "xml");
@@ -108,12 +108,53 @@ public class XmlUtils {
 	    transformer.transform(new DOMSource(xml), new StreamResult(stringWriter));
 	    stringWriter.flush();
 	    return stringWriter.toString();
+	    */
+		
+	    return myToString(xml, "\t");
 	}
 	
-	public static String myToString(Document xml) {
-		String output = "";
+	public static Document toXmlDocument(String rootElementName, Object object) throws ParserConfigurationException, SAXException {
+		Document document = newDocument();
+		Element rootElement = toXmlElement(rootElementName, object, document);
+		document.appendChild(rootElement);
+		return document;
+	}
+	private static Element toXmlElement(String elementName, Object object, Document document) throws SAXException {
+		if (object instanceof Node) {
+			throw new SAXException("Trying to build XML Node out of existing XML Node");
+		}
+		else if (object instanceof Collection) {
+			String elementNameSingular = elementName.endsWith("s") ? elementName.substring(0, elementName.length()-1) : elementName;
+			String elementNamePlural = elementNameSingular + "s";
+			
+			Element element = document.createElement(elementNamePlural);
+			for (Object item : (Collection<?>) object) {
+				element.appendChild(toXmlElement(elementNameSingular, item, document));
+			}
+			return element;
+		}
+		else if (object instanceof Map) {
+			Element element = document.createElement(elementName);
+			for (Object key : ((Map<?, ?>) object).keySet()) {
+				if (!(key instanceof String)) {
+					throw new SAXException("All Maps must have Strings as keys.");
+				}
+				else {
+					String name = (String) key;
+					Object value = ((Map<?, ?>) object).get(key);
+					element.appendChild(toXmlElement(name, value, document));
+				}
+			}
+			return element;
+		}
+		else return createTextElement(elementName, object.toString(), document);
+	}
+	
+	
+	private static String myToString(Document xml, String indent) {
+		String output = "<?xml version=\"1.0\" encoding=\"" + AOSConstants.CHARACTER_ENCODING + "\" standalone=\"yes\"?>" + "\n";
 		
-		ArrayList<String> lines = parseChild(xml.getDocumentElement());
+		ArrayList<String> lines = parseChild(xml.getDocumentElement(), indent);
 		for (int i=0; i<lines.size(); i++) {
 			output += lines.get(i);
 			if (i+1<lines.size()) {
@@ -124,7 +165,7 @@ public class XmlUtils {
 		return output;
 	}
 	
-	private static ArrayList<String> parseChild(Element element) {
+	private static ArrayList<String> parseChild(Element element, String indent) {
 		ArrayList<String> attributeLines = processAttributes(element);
 		NodeList childNodes = element.getChildNodes();
 		
@@ -138,7 +179,7 @@ public class XmlUtils {
 			output.add("<" + element.getTagName());
 			
 			for (String attributeLine : attributeLines) {
-				output.add("\t" + attributeLine);
+				output.add(indent + attributeLine);
 			}
 			
 			output.add(childNodes.getLength() == 0 ? "/>" : "\t>");
@@ -147,11 +188,18 @@ public class XmlUtils {
 		if (childNodes.getLength() > 0) {
 			for (int i=0; i<childNodes.getLength(); i++) {
 				Element child = (Element) childNodes.item(i);
-				for (String childNodeLine : parseChild(child)) {
-					output.add("\t" + childNodeLine);
+				for (String childNodeLine : parseChild(child, indent)) {
+					output.add(indent + childNodeLine);
 				}
 			}
 			output.add("</" + element.getTagName() + ">");
+		}
+		
+		if (indent == null) {
+			// Join all together in one line
+			String joined = StringUtils.join(output, "");
+			output.clear();
+			output.add(joined);
 		}
 		
 		return output;
