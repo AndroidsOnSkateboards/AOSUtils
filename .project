@@ -3,6 +3,7 @@
 	<name>AOSUtilsJava</name>
 	<comment></comment>
 	<projects>
+		<project>AOSUtilsBase</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
