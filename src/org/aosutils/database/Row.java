@@ -56,10 +56,13 @@ public abstract class Row {
 	}
 	
 	protected List<? extends Row> select(Map<Column, Object> criteria, Connection dbConnection) throws SQLException {
-		return select(criteria, null, dbConnection);
+		return select(criteria, null, null, null, dbConnection);
 	}
 	
-	protected List<? extends Row> select(Map<Column, Object> criteria, LinkedHashMap<Column, SortOrder> sortBy, Connection dbConnection) throws SQLException {
+	protected List<? extends Row> select(Map<Column, Object> criteria, 
+			ArrayList<Column> groupBy, LinkedHashMap<Column, SortOrder> orderBy, 
+			Integer limit, Connection dbConnection) throws SQLException {
+		
 		createTableIfNotExists(dbConnection);
 		
 		ArrayList<String> criteriaSqlParts = new ArrayList<String>();
@@ -152,13 +155,25 @@ public abstract class Row {
 			sql +=  String.format(" WHERE %s", StringUtils.join(criteriaSqlParts, " AND "));
 		}
 		
-		if (sortBy != null && sortBy.size() > 0) {
-			ArrayList<String> sortParts = new ArrayList<String>();
-			for (Column column : sortBy.keySet()) {
-				SortOrder sortOrder = sortBy.get(column);
-				sortParts.add(column.fullName() + " " + sortOrder);
+		if (groupBy != null && groupBy.size() > 0) {
+			ArrayList<String> groupByColumnNames = new ArrayList<String>();
+			for (Column column : groupBy) {
+				groupByColumnNames.add(column.fullName());
 			}
-			sql += " ORDER BY " + StringUtils.join(sortParts, ", ");
+			sql += " GROUP BY " + StringUtils.join(groupByColumnNames, ", ");
+		}
+		
+		if (orderBy != null && orderBy.size() > 0) {
+			ArrayList<String> orderParts = new ArrayList<String>();
+			for (Column column : orderBy.keySet()) {
+				SortOrder sortOrder = orderBy.get(column);
+				orderParts.add(column.fullName() + " " + sortOrder);
+			}
+			sql += " ORDER BY " + StringUtils.join(orderParts, ", ");
+		}
+		
+		if (limit != null) {
+			sql += " LIMIT " + limit;
 		}
 		
 		PreparedStatement preparedStatement = dbConnection.prepareStatement(sql);
