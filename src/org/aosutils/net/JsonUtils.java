@@ -24,8 +24,8 @@ public class JsonUtils {
 		return new JSONObject(input);
 	}
 	
-	public static String toString(JSONObject jsonObject) {
-		return jsonObject.toString();
+	public static String toString(JSONObject jsonObject, boolean indent) throws JSONException {
+		return indent ? jsonObject.toString(2) : jsonObject.toString();
 	}
 	
 	public static JSONArray toJsonArray(Collection<?> object) throws JSONException {
@@ -59,6 +59,6 @@ public class JsonUtils {
 			}
 			return jsonObject;
 		}
-		else return object.toString();
+		else return object == null ? "" : object.toString();
 	}
 }

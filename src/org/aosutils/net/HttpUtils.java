@@ -140,7 +140,8 @@ public class HttpUtils {
 			
 			int statusCode = httpConnection.getResponseCode();
 			
-			if (statusCode >= 300) { // Bad HTTP status code
+			// Some old Android devices throw statusCode -1 when there's a problem
+			if (statusCode == -1 || statusCode >= 300) { // Bad HTTP status code
 				String response = null;
 				try {
 					InputStream errorStream = gUnzip(httpConnection.getErrorStream(), urlConnection);
