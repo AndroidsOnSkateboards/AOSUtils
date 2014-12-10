@@ -39,24 +39,31 @@ public class IoUtils {
 	}
 	
 	public static void writeFile(String filename, InputStream inputStream, WriteFileMonitor monitor) throws IOException {
-		if (monitor == null) {
-			// To avoid NULL exceptions, but the calling function will not have access to this monitor
-			monitor = new WriteFileMonitor();
+		try {
+			if (monitor == null) {
+				// To avoid NULL exceptions, but the calling function will not have access to this monitor
+				monitor = new WriteFileMonitor();
+			}
+			
+			byte[] buffer = new byte[1024];
+			new File(filename).getParentFile().mkdirs();
+			OutputStream outputStream = new FileOutputStream(filename);
+			
+			try {
+				int bytesRead;
+		        while(!monitor.isCancelled() && (bytesRead = inputStream.read(buffer)) != -1) {
+		        	outputStream.write(buffer, 0, bytesRead);
+		        	monitor.bytes += bytesRead;
+		        }
+			}
+			finally {
+				outputStream.flush();
+		        outputStream.close();
+			}
 		}
-		
-		byte[] buffer = new byte[1024];
-		new File(filename).getParentFile().mkdirs();
-		OutputStream outputStream = new FileOutputStream(filename);
-		
-		int bytesRead;
-        while(!monitor.isCancelled() && (bytesRead = inputStream.read(buffer)) != -1) {
-        	outputStream.write(buffer, 0, bytesRead);
-        	monitor.bytes += bytesRead;
-        }
-		
-        inputStream.close();
-        outputStream.flush();
-        outputStream.close();
+		finally {
+			inputStream.close();
+		}
         
         if (monitor.isCancelled) {
         	new File(filename).delete();
