@@ -171,15 +171,28 @@ public class YtApiStreams {
 		
 		HashMap<String, String> urls = new HashMap<String, String>();
 		
-		try {
-			urls = getFormatsFromDesktopSite(videoId, context);
-		}
-		catch (Exception e) {
-			streamResult.desktopSiteException = e;
-		}
-		
-		if (urls.size() == 0) {
+		if (!mediaPlayerSupportsHttps()) {
+			// Older Android devices -- This gets HTTP url's, but doesn't work on protected (signature) videos
 			urls = getFormatsFromVideoInformation(videoId, context);
+			
+			if (urls.size() == 0) {
+				// Fallback, try desktop site, will probably fail a bunch of times attempting http, may eventually give up and use https
+				urls = getFormatsFromDesktopSite(videoId, context);
+			}
+		}
+		else {
+			// Newer Android devices
+			try {
+				urls = getFormatsFromDesktopSite(videoId, context);
+			}
+			catch (Exception e) {
+				streamResult.desktopSiteException = e;
+			}
+		
+			if (urls.size() == 0) {
+				// Fallback
+				urls = getFormatsFromVideoInformation(videoId, context);
+			}
 		}
 		
 		for (String recommendedFormat : recommendedFormats) {
@@ -201,27 +214,37 @@ public class YtApiStreams {
 	
 	public static String getDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
 		// Android < 2.2 fails on YouTube's HTTPS desktop site (doesn't trust the SSL cert)
-		// Android < 3.2 fails on MediaPlayer playing https URL's, which is what SSL desktop site returns
+		// Android < 3.2 fails on MediaPlayer streaming https URL's, which is what SSL desktop site returns
 		
+		// http rarely works.. YouTube is shutting it down..
 		String protocol = mediaPlayerSupportsHttps() ? "https" : "http";
 		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
 		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
 		// Android < 2.2 fails on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
-		//boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
+		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
 		
 		int tries = 6;
 		IOException exception = null;
 		
+		// Retries are no longer necessary if always using "https" protocol. A workaround on older Android devices is to just download the video first..
 		for (int i=0; i<tries; i++) {
 			try {
-				return HttpUtils.get(url, headers, _YtApiConstants.HTTP_TIMEOUT);
+				if (i+1 == tries) {
+					// Last try, use https. This always works; older devices will need to download this URL instead of stream it
+					url = url.replace("http://", "https://");
+				}
+				
+				String response = HttpUtils.request(url, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
+				return response;
 			}
 			catch (IOException e) {
 				exception = e;
-				if (e instanceof HttpStatusCodeException && ((HttpStatusCodeException) e).getStatusCode() == 301) { // YouTube is trying to redirect to HTTPS
-					// Retry
+				if (e instanceof HttpStatusCodeException && (((HttpStatusCodeException) e).getStatusCode() == 301 ||
+						((HttpStatusCodeException) e).getStatusCode() == -1)) { // YouTube is trying to redirect to HTTPS
+					// Some older devices get HTTP status code -1, newer devices get 301 
+					// Retry..
 					try {
 						Thread.sleep(1000);
 					} catch (InterruptedException e1) {
@@ -229,6 +252,7 @@ public class YtApiStreams {
 					}
 				}
 				else {
+					e.printStackTrace();
 					break;
 				}
 			}
@@ -268,7 +292,8 @@ public class YtApiStreams {
 		String page = HttpUtils.get(uri, null, _YtApiConstants.HTTP_TIMEOUT);
 		
 		// This page doesn't contain algorithm info, so load it from preferences
-		String algorithm = AlgorithmPreference.get(context).algorithm;
+		AlgorithmPreference algorithmPreference = AlgorithmPreference.get(context);
+		String algorithm = algorithmPreference == null ? null : algorithmPreference.algorithm;
 		
 		// Parse formats
 		HashMap<String, String> formats = new HashMap<String, String>();
