@@ -35,6 +35,9 @@ public class StringUtils {
 		Map<String, String> urlEncodedArgs = new LinkedHashMap<String, String>(); 
 		for (String key : urlArgs.keySet()) {
 			String value = urlArgs.get(key);
+			if (value == null) {
+				value = "";
+			}
 			
 			try {
 				key = URLEncoder.encode(key, AOSConstants.CHARACTER_ENCODING);
