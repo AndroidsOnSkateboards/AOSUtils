@@ -10,6 +10,7 @@
     <string name="action_SubmitBugReport">提交bug報告..</string>
     <string name="action_SubmitFeedback">提交反饋..</string>
     <string name="help_BugReport">描述問題：</string>
+    <string name="alert">警報</string>
     <string name="warning">警告</string>
     <string name="error">錯誤</string>
     <string name="error_Connection">無法連接到網絡！</string>

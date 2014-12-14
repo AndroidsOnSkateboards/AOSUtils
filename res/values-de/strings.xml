@@ -10,6 +10,7 @@
     <string name="action_SubmitBugReport">Fehlerbericht einreichen ..</string>
     <string name="action_SubmitFeedback">Feedback senden ..</string>
     <string name="help_BugReport">Beschreiben Sie das Problem:</string>
+    <string name="alert">Warnung</string>
     <string name="warning">Warnung</string>
     <string name="error">Fehler</string>
     <string name="error_Connection">Kann keine Verbindung zum Internet aufbauen!</string>

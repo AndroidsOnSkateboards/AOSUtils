@@ -14,6 +14,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.wifi.WifiManager;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
@@ -91,7 +94,20 @@ public class AOSUtilsCommon {
 	}
 	
 	public static void alert(String title, String message, Context context) {
-		new AlertDialog.Builder(context).setTitle(title).setMessage(message).setPositiveButton(android.R.string.ok, null).show();
+		alert(title, message, context, false);
+	}
+	public static void alert(String title, String message, Context context, boolean linksClickable) {
+		SpannableString spannableString = new SpannableString(message);
+		if (linksClickable) {
+			Linkify.addLinks(spannableString, Linkify.ALL);
+		}
+		
+		AlertDialog dialog = new AlertDialog.Builder(context).setTitle(title).setMessage(spannableString).setPositiveButton(android.R.string.ok, null).create();
+		dialog.show();
+		// Make text links clickable
+		if (linksClickable) {
+			((TextView) dialog.findViewById(android.R.id.message)).setMovementMethod(LinkMovementMethod.getInstance());
+		}
 	}
 	
 	public static Dialog confirm(String title, String message, Context context, DialogInterface.OnClickListener onConfirmListener) {
