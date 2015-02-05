@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-import org.aosutils.AOSConstants;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.net.HttpStatusCodeException;
@@ -171,28 +171,16 @@ public class YtApiStreams {
 		
 		HashMap<String, String> urls = new HashMap<String, String>();
 		
-		if (!mediaPlayerSupportsHttps()) {
-			// Older Android devices -- This gets HTTP url's, but doesn't work on protected (signature) videos
-			urls = getFormatsFromVideoInformation(videoId, context);
-			
-			if (urls.size() == 0) {
-				// Fallback, try desktop site, will probably fail a bunch of times attempting http, may eventually give up and use https
-				urls = getFormatsFromDesktopSite(videoId, context);
-			}
+		try {
+			urls = getFormatsFromDesktopSite(videoId, context);
 		}
-		else {
-			// Newer Android devices
-			try {
-				urls = getFormatsFromDesktopSite(videoId, context);
-			}
-			catch (Exception e) {
-				streamResult.desktopSiteException = e;
-			}
-		
-			if (urls.size() == 0) {
-				// Fallback
-				urls = getFormatsFromVideoInformation(videoId, context);
-			}
+		catch (Exception e) {
+			streamResult.desktopSiteException = e;
+		}
+	
+		if (urls.size() == 0) {			
+			// Fallback
+			urls = getFormatsFromVideoInformation(videoId, context);
 		}
 		
 		for (String recommendedFormat : recommendedFormats) {
@@ -212,15 +200,14 @@ public class YtApiStreams {
 		return streamResult;
 	}
 	
-	public static String getDesktopSite(String videoId) throws FileNotFoundException, MalformedURLException, IOException {
-		// Android < 2.2 fails on YouTube's HTTPS desktop site (doesn't trust the SSL cert)
-		// Android < 3.2 fails on MediaPlayer streaming https URL's, which is what SSL desktop site returns
-		
-		// http rarely works.. YouTube is shutting it down..
-		String protocol = mediaPlayerSupportsHttps() ? "https" : "http";
+	// HTTP rarely works; Sometimes it takes a few retries. YouTube is shutting it down..
+	// HTTPS is recommended, although Android 2.2 and below's MediaPlayer can't stream HTTPS URL's. 
+	public static String getDesktopSite(String videoId, boolean useHttpsRecommended) throws FileNotFoundException, MalformedURLException, IOException {
+		String protocol = useHttpsRecommended ? "https" : "http";
 		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
-		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
+		// -- With this header, even on an HTTP->HTTPS redirect with a "Referer" header, the streams would still come back as HTTPS, so leave this out
+		//headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
 		// Android < 2.2 fails on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
 		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
@@ -228,27 +215,38 @@ public class YtApiStreams {
 		int tries = 6;
 		IOException exception = null;
 		
-		// Retries are no longer necessary if always using "https" protocol. A workaround on older Android devices is to just download the video first..
+		// Retries were put in place for the HTTP site. It's not so relevant when accessing the HTTPS site because that should work the first time
 		for (int i=0; i<tries; i++) {
 			try {
-				if (i+1 == tries) {
-					// Last try, use https. This always works; older devices will need to download this URL instead of stream it
-					url = url.replace("http://", "https://");
-				}
-				
 				String response = HttpUtils.request(url, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
 				return response;
 			}
 			catch (IOException e) {
 				exception = e;
-				if (e instanceof HttpStatusCodeException && (((HttpStatusCodeException) e).getStatusCode() == 301 ||
-						((HttpStatusCodeException) e).getStatusCode() == -1)) { // YouTube is trying to redirect to HTTPS
-					// Some older devices get HTTP status code -1, newer devices get 301 
-					// Retry..
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
+				
+				if (e instanceof HttpStatusCodeException) {
+					int statusCode = ((HttpStatusCodeException) e).getStatusCode();
+					
+					if (statusCode == 301 || statusCode == -1) { // YouTube is trying to redirect to HTTPS
+						// Some older devices get HTTP status code -1, newer devices get 301 
+						// Retry..
+						
+						if (!headers.containsKey("Referer") && url.contains("http://")) {
+							// Redirect to HTTPS with an HTTP "Referer" header, so the resulting streams with be HTTP streams
+							headers.put("Referer", url);
+							url = url.replace("http://", "https://");
+						}
+						
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+						
+					}
+					else {
+						e.printStackTrace();
+						break;
 					}
 				}
 				else {
@@ -258,11 +256,25 @@ public class YtApiStreams {
 			}
 		}
 		
+		
 		throw exception;
 	}
 	
 	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
-		String page = getDesktopSite(videoId);
+		String page;
+		if (mediaPlayerSupportsHttps()) {
+			page = getDesktopSite(videoId, true);
+		}
+		else {
+			// Android's MediaPlayer doesn't support HTTPS... First try HTTP, then fall back to HTTPS
+			try {
+				page = getDesktopSite(videoId, false);
+			}
+			catch (Exception e) {
+				page = getDesktopSite(videoId, true);
+			}
+		}
+		page = page.replace("\\\"", "\"");
 		
 		// This page contains algorithm info, so check it against the current used algorithm and update if necessary
 		String algorithm = getOrUpdateAlgorithm(page, context);
@@ -273,13 +285,19 @@ public class YtApiStreams {
 		String[] mapNames = { "url_encoded_fmt_stream_map", "adaptive_fmts" };
 		
 		for (String mapName : mapNames) {
-			String map = String.format("\"%s\": \"", mapName);
+			String map = String.format("\"%s\":\"", mapName);
 			int pos = page.indexOf(map);
+			if (pos == -1) {
+				map = String.format("\"%s\": \"", mapName);
+				pos = page.indexOf(map);
+			}
+			
 			if (pos != -1) {
 				int begin = pos + map.length();
 				int end = page.indexOf("\"", begin);
 				
-				String urlEncodedFmtStreamMap = page.substring(begin, end).replace("\\u0026", "&");
+				String urlEncodedFmtStreamMap = page.substring(begin, end).replace("\\\\u0026", "&").replace("\\u0026", "&");
+				
 				formats.putAll(parseUrls(urlEncodedFmtStreamMap, algorithm));
 			}
 		}
@@ -288,7 +306,7 @@ public class YtApiStreams {
 	}
 	
 	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
-		String uri = "http://www.youtube.com/get_video_info?&video_id=" + videoId;
+		String uri = "http://www.youtube.com/get_video_info?video_id=" + videoId + "&el=vevo";
 		String page = HttpUtils.get(uri, null, _YtApiConstants.HTTP_TIMEOUT);
 		
 		// This page doesn't contain algorithm info, so load it from preferences
@@ -311,7 +329,8 @@ public class YtApiStreams {
 				}
 				
 				String urlEncodedFmtStreamMap = URLDecoder.decode(page.substring(begin, end), _YtApiConstants.CHARACTER_ENCODING);
-				formats.putAll(parseUrls(urlEncodedFmtStreamMap, algorithm));
+				HashMap<String, String> newFormats = parseUrls(urlEncodedFmtStreamMap, algorithm);
+				formats.putAll(newFormats);
 			}
 		}
 		
@@ -381,14 +400,14 @@ public class YtApiStreams {
 		}
 	}
 	
-	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {		
+	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {
 		HashMap<String, String> formats = new HashMap<String, String>();
 			
 		String[] urls = TextUtils.split(urlEncodedFmtStreamMap, ",");
 		for (String url : urls) {
 			String[] params = TextUtils.split(url, "&");
 			
-			HashMap<String, String> paramMap = new HashMap<String, String>();
+			TreeMap<String, String> paramMap = new TreeMap<String, String>();
 			
 			for (String set : params) {
 				String[] setParts = TextUtils.split(set, "=");
@@ -409,12 +428,12 @@ public class YtApiStreams {
 					String signature = paramMap.get("s");
 					
 					if (algorithm != null) {
-						feedUrl = YtApiSignature.decode(feedUrl, signature, algorithm);
+						String fixedSignature = YtApiSignature.decode(signature, algorithm);
+						feedUrl = feedUrl + "&signature=" + fixedSignature;
 						
 						// Only store the format if the signature has been successfully decoded
 						formats.put(itag, feedUrl);
 					}
-					
 				}
 			}
 		}

@@ -52,7 +52,7 @@ public class YtApiSignature {
 	 * sN = slice from character N to the end;
 	 * wN = swap 0th and Nth character.
 	 */
-	public static String decode(String url, String signature, String algorithm) {
+	public static String decode(String signature, String algorithm) {
 		for (String procedure : TextUtils.split(algorithm, " ")) {
 			String procedureType = procedure.substring(0, 1);
 			if (procedureType.equals("r")) { // reverse the string
@@ -67,8 +67,7 @@ public class YtApiSignature {
 				signature = signature.substring(position, position+1) + signature.substring(1, position) + signature.substring(0, 1) + signature.substring(position+1);
 			}
 		}
-		
-		return url + "&signature=" + signature;
+		return signature;
 	}
 	
 	private static Html5PlayerInfo getHtml5PlayerInfo(String youtubePageSource) {
