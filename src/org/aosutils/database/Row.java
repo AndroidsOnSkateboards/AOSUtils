@@ -56,10 +56,10 @@ public abstract class Row {
 	}
 	
 	protected List<? extends Row> select(Map<Column, Object> criteria, Connection dbConnection) throws SQLException {
-		return select(criteria, null, null, null, dbConnection);
+		return select(null, criteria, null, null, null, dbConnection);
 	}
 	
-	protected List<? extends Row> select(Map<Column, Object> criteria, 
+	protected List<? extends Row> select(String optionalTableName, Map<Column, Object> criteria, 
 			ArrayList<Column> groupBy, LinkedHashMap<Column, SortOrder> orderBy, 
 			Integer limit, Connection dbConnection) throws SQLException {
 		
@@ -150,7 +150,7 @@ public abstract class Row {
 			}
 		}
 		
-		String sql = String.format("SELECT * FROM `%s`", getTableName());
+		String sql = String.format("SELECT * FROM `%s`", optionalTableName != null ? optionalTableName : getTableName());
 		if (criteriaSqlParts.size() > 0) {
 			sql +=  String.format(" WHERE %s", StringUtils.join(criteriaSqlParts, " AND "));
 		}
