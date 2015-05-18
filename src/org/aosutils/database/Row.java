@@ -150,7 +150,8 @@ public abstract class Row {
 			}
 		}
 		
-		String sql = String.format("SELECT * FROM `%s`", optionalTableName != null ? optionalTableName : getTableName());
+		String tableName = optionalTableName != null ? optionalTableName : getTableName();
+		String sql = String.format("SELECT * FROM `%s`", tableName);
 		if (criteriaSqlParts.size() > 0) {
 			sql +=  String.format(" WHERE %s", StringUtils.join(criteriaSqlParts, " AND "));
 		}
@@ -158,7 +159,7 @@ public abstract class Row {
 		if (groupBy != null && groupBy.size() > 0) {
 			ArrayList<String> groupByColumnNames = new ArrayList<String>();
 			for (Column column : groupBy) {
-				groupByColumnNames.add(column.fullName());
+				groupByColumnNames.add(String.format("`%s`.`%s`", tableName, column.getColumnName()));
 			}
 			sql += " GROUP BY " + StringUtils.join(groupByColumnNames, ", ");
 		}
@@ -167,7 +168,7 @@ public abstract class Row {
 			ArrayList<String> orderParts = new ArrayList<String>();
 			for (Column column : orderBy.keySet()) {
 				SortOrder sortOrder = orderBy.get(column);
-				orderParts.add(column.fullName() + " " + sortOrder);
+				orderParts.add(String.format("`%s`.`%s` %s", tableName, column.getColumnName(), sortOrder));
 			}
 			sql += " ORDER BY " + StringUtils.join(orderParts, ", ");
 		}
