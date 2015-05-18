@@ -80,7 +80,11 @@ public class YtApiSignature {
 			
 			String playerVersion = matcher.group(1);
 			
-			String path = youtubePageSource.substring(pathBegin, pathEnd).replace("\\/", "/");
+			String path = youtubePageSource.substring(pathBegin, pathEnd);
+			while (path.contains("\\/")) {
+				path = path.replace("\\/", "/");
+			}
+			
 			if (path.startsWith("//")) {
 				path = "http:" + path;
 			}
