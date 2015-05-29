@@ -22,7 +22,16 @@ import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
 import org.aosutils.IoUtils.WriteFileMonitor;
 
+import sun.misc.BASE64Encoder;
+
 public class HttpUtils {	
+	public static String genBasicAuthHeader(String username, String password) {
+		String authStr = username + ":" + password;
+		String authStrEncoded = "Basic " + new BASE64Encoder().encode(authStr.getBytes()).replace("\r", "").replace("\n", "");
+		
+		return authStrEncoded;
+	}
+	
 	public static String get(String url, Map<String, String> headers, Integer httpTimeout) throws FileNotFoundException, MalformedURLException, IOException {
 		return request(url, headers, null, httpTimeout, null, false);
 	}
