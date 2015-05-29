@@ -195,6 +195,21 @@ public abstract class Row {
 		}
 	}
 	
+	protected boolean nullSafeEquals(Object a, Object b) {
+		if (a == null && b == null) {
+			return true;
+		}
+		else if (a == null && b != null) {
+			return false;
+		}
+		else if (a != null && b == null) {
+			return false;
+		}
+		else {
+			return a.equals(b);
+		}
+	}
+	
 	public void writeProtect(String reason) {
 		this.writeProtectMessage = reason;
 	}
@@ -285,14 +300,6 @@ public abstract class Row {
 			preparedStatement.close();
 		}
 	}
-	
-	/*
-	public static void createTableIfNotExists(Connection dbConnection, Class<? extends Row> rowClass) throws SQLException, InstantiationException, IllegalAccessException {
-		if (!_DatabaseSingleton.getInstance().isInitialized(rowClass)) { // Check here to prevent slow reflection call
-			rowClass.newInstance().createTableIfNotExists(dbConnection);
-		}
-	}
-	*/
 	
 	public void createTableIfNotExists(Connection dbConnection) throws SQLException {
 		if (!_DatabaseSingleton.getInstance().isInitialized(this.getClass())) {
@@ -415,20 +422,5 @@ public abstract class Row {
 		
 		ResultSet results = preparedStatement.getResultSet();
 		return results;
-	}
-	
-	protected boolean nullSafeEquals(Object a, Object b) {
-		if (a == null && b == null) {
-			return true;
-		}
-		else if (a == null && b != null) {
-			return false;
-		}
-		else if (a != null && b == null) {
-			return false;
-		}
-		else {
-			return a.equals(b);
-		}
 	}
 }
