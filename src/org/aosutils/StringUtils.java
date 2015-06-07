@@ -109,6 +109,23 @@ public class StringUtils {
 		return urlDecodedArgs;
 	}
 	
+	public static int countOccurrences(String substring, String string) {
+		int matches = 0;
+		
+		for (int i=0; i<string.length(); i++) {
+			int match = string.indexOf(substring, i);
+			if (match == -1) {
+				return matches;
+			}
+			else {
+				matches++;
+				i = match; // Will get incremented one more on next loop (++)
+			}
+		}
+		
+		return matches;
+	}
+	
 	public static String padLeft(String s, int spaces) {
 		return String.format("%1$" + spaces + "s", s);
 	}
