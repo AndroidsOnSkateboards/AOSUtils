@@ -2,8 +2,8 @@ package org.aosutils.database;
 
 import java.math.BigInteger;
 import java.sql.Blob;
-import java.sql.Date;
 import java.sql.Types;
+import java.util.Date;
 
 public class Column {
 	private String tableName;
@@ -38,10 +38,10 @@ public class Column {
 		
 		this.typeStr = type.equals(Integer.class) ? "INT" :
 			type.equals(Long.class) || type.equals(BigInteger.class) ? "BIGINT" :
-				type.equals(Boolean.class) ? "BOOLEAN" :
-				type.equals(Float.class) || type.equals(Double.class) ? "DOUBLE" :
-				type.equals(Date.class) ? "DATETIME" :
-				"VARCHAR";
+			type.equals(Boolean.class) ? "BOOLEAN" :
+			type.equals(Float.class) || type.equals(Double.class) ? "DOUBLE" :
+			type.equals(Date.class) ? "DATETIME" :
+			"VARCHAR";
 		
 		this.type = type == Integer.class ? Types.INTEGER :
 			type.equals(Long.class) || type.equals(BigInteger.class) ? Types.BIGINT :
