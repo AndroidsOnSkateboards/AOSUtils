@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <style name="Theme.Dialog" parent="android:Theme.Dialog">
-	    <item name="clickableItemBackground">@android:drawable/list_selector_background</item>
-    </style>
-    
-    <attr name="clickableItemBackground" format="reference"/>
-</resources>
