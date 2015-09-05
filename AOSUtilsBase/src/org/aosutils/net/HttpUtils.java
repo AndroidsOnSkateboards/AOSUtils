@@ -22,7 +22,7 @@ import org.aosutils.AOSConstants;
 import org.aosutils.IoUtils;
 import org.aosutils.IoUtils.WriteFileMonitor;
 
-import sun.misc.BASE64Encoder;
+import backported.sun.misc.BASE64Encoder;
 
 public class HttpUtils {	
 	public static String genBasicAuthHeader(String username, String password) {

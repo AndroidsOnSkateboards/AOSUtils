@@ -15,7 +15,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.aosutils.AOSConstants;
-import org.aosutils.Base64;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.android.loadingtask.LoadingTask;
@@ -25,6 +24,7 @@ import org.aosutils.net.HttpUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import backported.sun.misc.BASE64Encoder;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences.Editor;
@@ -438,6 +438,6 @@ public class SocialTwitter {
 		Mac mac = Mac.getInstance(algorithm);
 		mac.init(secretKey);
 		byte[] text = baseString.getBytes();
-		return new String(Base64.encode(mac.doFinal(text), Base64.DEFAULT)).trim();
+		return new String(new BASE64Encoder().encode(mac.doFinal(text))).trim();
 	}
 }
