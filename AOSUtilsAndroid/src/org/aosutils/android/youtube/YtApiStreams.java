@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.aosutils.AOSConstants;
 import org.aosutils.android.AOSUtilsCommon;
 import org.aosutils.android.R;
 import org.aosutils.net.HttpStatusCodeException;
@@ -17,6 +18,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 public class YtApiStreams {
 	/*
@@ -201,13 +203,14 @@ public class YtApiStreams {
 	}
 	
 	// HTTP rarely works; Sometimes it takes a few retries. YouTube is shutting it down..
-	// HTTPS is recommended, although Android 2.2 and below's MediaPlayer can't stream HTTPS URL's. 
+	// HTTPS is recommended, although Android 3.1 and below's MediaPlayer can't stream HTTPS URL's. 
 	public static String getDesktopSite(String videoId, boolean useHttpsRecommended) throws FileNotFoundException, MalformedURLException, IOException {
 		String protocol = useHttpsRecommended ? "https" : "http";
 		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<String, String>();
-		// -- With this header, even on an HTTP->HTTPS redirect with a "Referer" header, the streams would still come back as HTTPS, so leave this out
-		//headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
+		// -- Previously: With this header, even on an HTTP->HTTPS redirects with a "Referer" header, the streams would still come back as HTTPS (and not work on older devices), so best to leave it out
+		// -- LATEST UPDATE: This header seems to be required, otherwise http URL's are returned - and they do not work
+		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
 		// Android < 2.2 fails on YouTube's SSL cert, so force them to always trust it (we anyways aren't sending any secure information)
 		boolean forceTrustSSLCert = android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.ECLAIR_MR1;
@@ -218,6 +221,8 @@ public class YtApiStreams {
 		// Retries were put in place for the HTTP site. It's not so relevant when accessing the HTTPS site because that should work the first time
 		for (int i=0; i<tries; i++) {
 			try {
+				Log.v("SSA", "trying URL : " + url);
+				
 				String response = HttpUtils.request(url, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
 				return response;
 			}
@@ -433,6 +438,8 @@ public class YtApiStreams {
 						
 						// Only store the format if the signature has been successfully decoded
 						formats.put(itag, feedUrl);
+						
+						Log.v("SSA", "storing format: " + itag + " , " + feedUrl);
 					}
 				}
 			}
