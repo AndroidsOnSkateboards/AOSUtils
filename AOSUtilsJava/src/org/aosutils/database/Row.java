@@ -195,6 +195,11 @@ public abstract class Row {
 		}
 	}
 	
+	protected Long getLongOrNull(ResultSet rs, String columnName) throws SQLException {
+		Long result = rs.getLong(columnName);
+		return rs.wasNull() ? null : result;
+	}
+	
 	protected boolean nullSafeEquals(Object a, Object b) {
 		if (a == null && b == null) {
 			return true;
