@@ -173,10 +173,11 @@ public class YtApiSignature {
 					: "var " + Pattern.quote(functionName) + "=function\\(.*?\\)\\{(.*?)\\}";
 		}
 		
-		Matcher matcher = Pattern.compile(regex).matcher(document);
+		Matcher matcher = Pattern.compile(regex, Pattern.DOTALL).matcher(document);
 		if (matcher.find()) {
 			return matcher.group(1);
 		}
+
 		return null;
 	}
 	
