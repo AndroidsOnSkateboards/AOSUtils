@@ -72,7 +72,7 @@ public class YtApiSignature {
 	
 	private static Html5PlayerInfo getHtml5PlayerInfo(String youtubePageSource) {
 		String regex = "player-([^{:]+?)\\.js";
-		
+
 		Matcher matcher = Pattern.compile(regex).matcher(youtubePageSource);
 		if (matcher.find()) {
 			int pathBegin = youtubePageSource.substring(0, matcher.start()).lastIndexOf("\"") + 1;
@@ -98,7 +98,7 @@ public class YtApiSignature {
 			
 			return playerInfo;
 		}
-		
+
 		return null;
 	}
 	
@@ -137,7 +137,10 @@ public class YtApiSignature {
 			 */
 			
 			// Split
-			body = replaceAll(body, "[^;]+=[^;]+\\.split\\(\"\"\\)[^;]*", new int[] { }, "");
+			body = replaceAll(body, "[^;]+=[^;]+\\.split\\(\"\"\\);", new int[] { }, "");
+
+			// Join
+			body = replaceAll(body, "[;]*[ ]*return [^;]+\\.join\\(\"\"\\)", new int[] { }, "");
 
 			// Reverse
 			body = replaceAll(body, "[^;]+=[^;]+\\.reverse\\(\\)[^;]*", new int[] { }, "r");
@@ -145,12 +148,9 @@ public class YtApiSignature {
 			// Slice
 			body = replaceAll(body, "[^;]+=[^;]+\\.slice\\((.*?)\\)[^;]*", new int[]{1}, "s%s");
 
-			// Function call to Swap/Reverse/Slice
+			// Function call to Swap/Reverse/Splice
 			//body = replaceAll(body, "[^;]+=[^;]+\\([^;]+,(.+?)\\)[^;]*", new int[] { 1 }, "w%s");
 			body = replaceFunctions(body, jsSrc);
-
-			// Join
-			body = replaceAll(body, "[^;]*return [^;]+\\.join\\(\"\"\\)", new int[] { }, "");
 
 			// Clean up
 			body = body.replace(";", " ").trim();
@@ -160,19 +160,20 @@ public class YtApiSignature {
 	}
 	
 	private static String getFunctionBody(String functionName, String document) {
+
 		String regex;
 		if (functionName.contains(".")) {
-			String functionVar = functionName.substring(0, functionName.indexOf("."));
-			String function = functionName.substring(functionName.indexOf(".")+1);
+			String functionVar = functionName.substring(0, functionName.indexOf(".")).trim();
+			String function = functionName.substring(functionName.indexOf(".")+1).trim();
 			
 			regex = "var " + Pattern.quote(functionVar) + "=\\{.*?" + function + ":function\\(.*?\\)\\{(.*?)\\}";
 		}
 		else {
 			regex = document.contains("function " + functionName)
 					? "function " + Pattern.quote(functionName) + "\\(.+?\\)\\{(.+?)\\}"
-					: "var " + Pattern.quote(functionName) + "=function\\(.*?\\)\\{(.*?)\\}";
+					: "[, ]" + Pattern.quote(functionName) + "=function\\(.*?\\)\\{(.*?)\\}";
 		}
-		
+
 		Matcher matcher = Pattern.compile(regex, Pattern.DOTALL).matcher(document);
 		if (matcher.find()) {
 			return matcher.group(1);
@@ -209,27 +210,27 @@ public class YtApiSignature {
 		String regexToFind = "[^;]*?[=]*([^;]*?)\\(([^;]+?),([^;]+?)\\)[^;]*";
 		
 		Matcher matcher = Pattern.compile(regexToFind).matcher(algorithmFunction);
+
 		while (matcher.find()) {
 			//String match = algorithmFunction.substring(matcher.start(), matcher.end());
 			String fnName = matcher.group(1);
 			String fnValue1 = matcher.group(2);
 			String fnValue2 = matcher.group(3);
-			
+
 			String fnValue = fnValue2;
 			try {
 				Double.parseDouble(fnValue2);
-			}
-			catch (NumberFormatException e) {
+			} catch (NumberFormatException e) {
 				fnValue = fnValue1;
 			}
-			
+
 			String fnBody = getFunctionBody(fnName, jsSrc);
 			String replacement = fnBody.contains("reverse") ? "r" :
-				fnBody.contains("slice") || fnBody.contains("splice") ? "s"+fnValue :
-				"w"+fnValue;
-			
+					fnBody.contains("slice") || fnBody.contains("splice") ? "s" + fnValue :
+							"w" + fnValue;
+
 			algorithmFunction = algorithmFunction.substring(0, matcher.start()) + replacement + algorithmFunction.substring(matcher.end());
-			
+
 			// Reset matcher for new document (with new replacements)
 			matcher = Pattern.compile(regexToFind).matcher(algorithmFunction);
 		}
