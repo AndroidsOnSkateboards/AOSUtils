@@ -15,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class YtApiSignature {	
+public class YtApiSignature {
 	/*
 	 *  Thanks to the great documentation at youtubedown, I've been able to replicate this in Java:
 	 *  youtubedown: http://www.jwz.org/hacks/youtubedown
@@ -27,7 +27,7 @@ public class YtApiSignature {
 	}
 	
 	public static String requestCurrentAlgorithm() throws FileNotFoundException, MalformedURLException, IOException {
-		HashMap<String, String> headers = new HashMap<String, String>();
+		HashMap<String, String> headers = new HashMap<>();
 		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
 		String homepage = HttpUtils.get("http://www.youtube.com", headers, _YtApiConstants.HTTP_TIMEOUT);
@@ -187,7 +187,7 @@ public class YtApiSignature {
 		while (matcher.find()) {
 			String match = document.substring(matcher.start(), matcher.end());
 			
-			ArrayList<String> extractedValues = new ArrayList<String>();
+			ArrayList<String> extractedValues = new ArrayList<>();
 			
 			for (int valueIndexToExtract : valueIndicesToExtract) {
 				String extractedValue = matcher.group(valueIndexToExtract);

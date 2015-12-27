@@ -43,10 +43,10 @@ public class YtApiStreams {
 	
 	public enum StreamType {
 		/* - VIDEO_ONLY streams don't seem to work; Tested on Android 2.3, Android 4.4; Also commented out below.. */
-		VIDEO_AND_AUDIO, VIDEO_AND_AUDIO_LOW_QUALITY, AUDIO_ONLY_OR_VIDEO, AUDIO_ONLY_OR_VIDEO_LOW_QUALITY; //, VIDEO_ONLY;
+		VIDEO_AND_AUDIO, VIDEO_AND_AUDIO_LOW_QUALITY, AUDIO_ONLY_OR_VIDEO, AUDIO_ONLY_OR_VIDEO_LOW_QUALITY //, VIDEO_ONLY
 	}
 	public enum ConnectionType {
-		UNUSABLE, SLOW, MEDIUM, FAST;
+		UNUSABLE, SLOW, MEDIUM, FAST
 	}
 	
 	public static class StreamResult {
@@ -170,7 +170,7 @@ public class YtApiStreams {
 	private static StreamResult findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws FileNotFoundException, MalformedURLException, IOException {
 		StreamResult streamResult = new StreamResult();
 		
-		HashMap<String, String> urls = new HashMap<String, String>();
+		HashMap<String, String> urls = new HashMap<>();
 		
 		try {
 			urls = getFormatsFromDesktopSite(videoId, context);
@@ -206,7 +206,7 @@ public class YtApiStreams {
 	public static String getDesktopSite(String videoId, boolean useHttpsRecommended) throws FileNotFoundException, MalformedURLException, IOException {
 		String protocol = useHttpsRecommended ? "https" : "http";
 		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
-		HashMap<String, String> headers = new HashMap<String, String>();
+		HashMap<String, String> headers = new HashMap<>();
 		// -- Previously: With this header, even on an HTTP->HTTPS redirects with a "Referer" header, the streams would still come back as HTTPS (and not work on older devices), so best to leave it out
 		// -- LATEST UPDATE: This header seems to be required, otherwise http URL's are returned - and they do not work
 		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
@@ -220,8 +220,7 @@ public class YtApiStreams {
 		// Retries were put in place for the HTTP site. It's not so relevant when accessing the HTTPS site because that should work the first time
 		for (int i=0; i<tries; i++) {
 			try {
-				String response = HttpUtils.request(url, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
-				return response;
+				return HttpUtils.request(url, headers, null, _YtApiConstants.HTTP_TIMEOUT, null, forceTrustSSLCert);
 			}
 			catch (IOException e) {
 				exception = e;
@@ -282,7 +281,7 @@ public class YtApiStreams {
 		String algorithm = getOrUpdateAlgorithm(page, context);
 		
 		// Parse formats
-		HashMap<String, String> formats = new HashMap<String, String>();
+		HashMap<String, String> formats = new HashMap<>();
 		
 		String[] mapNames = { "url_encoded_fmt_stream_map", "adaptive_fmts" };
 		
@@ -316,7 +315,7 @@ public class YtApiStreams {
 		String algorithm = algorithmPreference == null ? null : algorithmPreference.algorithm;
 		
 		// Parse formats
-		HashMap<String, String> formats = new HashMap<String, String>();
+		HashMap<String, String> formats = new HashMap<>();
 		
 		String[] mapNames = { "url_encoded_fmt_stream_map", "adaptive_fmts" };
 		
@@ -403,13 +402,13 @@ public class YtApiStreams {
 	}
 	
 	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {
-		HashMap<String, String> formats = new HashMap<String, String>();
+		HashMap<String, String> formats = new HashMap<>();
 			
 		String[] urls = TextUtils.split(urlEncodedFmtStreamMap, ",");
 		for (String url : urls) {
 			String[] params = TextUtils.split(url, "&");
 			
-			TreeMap<String, String> paramMap = new TreeMap<String, String>();
+			TreeMap<String, String> paramMap = new TreeMap<>();
 			
 			for (String set : params) {
 				String[] setParts = TextUtils.split(set, "=");
