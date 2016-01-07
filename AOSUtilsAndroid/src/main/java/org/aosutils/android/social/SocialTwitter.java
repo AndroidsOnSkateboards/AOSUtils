@@ -1,5 +1,20 @@
 package org.aosutils.android.social;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences.Editor;
+import android.net.Uri;
+import android.text.TextUtils;
+
+import org.aosutils.AOSConstants;
+import org.aosutils.android.AOSUtilsCommon;
+import org.aosutils.android.R;
+import org.aosutils.android.loadingtask.LoadingTask;
+import org.aosutils.net.HttpStatusCodeException;
+import org.aosutils.net.HttpUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -14,22 +29,7 @@ import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.aosutils.AOSConstants;
-import org.aosutils.android.AOSUtilsCommon;
-import org.aosutils.android.R;
-import org.aosutils.android.loadingtask.LoadingTask;
-import org.aosutils.android.loadingtask.LoadingTaskActivity;
-import org.aosutils.net.HttpStatusCodeException;
-import org.aosutils.net.HttpUtils;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import backported.sun.misc.BASE64Encoder;
-import android.app.Activity;
-import android.content.Intent;
-import android.content.SharedPreferences.Editor;
-import android.net.Uri;
-import android.text.TextUtils;
 
 public class SocialTwitter {
 	private class TokenDoesntMatchException extends Exception {
@@ -103,11 +103,11 @@ public class SocialTwitter {
 		}
 	}
 	
-	public void onLoginSuccessful(Intent data, LoadingTaskActivity activity, Runnable onSuccessfulPostRunnable) {
+	public void onLoginSuccessful(Intent data, Activity loadingTaskActivity, Runnable onSuccessfulPostRunnable) {
 		String oAuthToken = data.getExtras().getString(SocialTwitter.OAUTH_RETURN_REQUEST_TOKEN);
 		String oAuthVerifier = data.getExtras().getString(SocialTwitter.OAUTH_RETURN_REQUEST_VERIFIER);
 		
-		new GetAccessTokenTask(oAuthToken, oAuthVerifier, activity, onSuccessfulPostRunnable).execute();
+		new GetAccessTokenTask(oAuthToken, oAuthVerifier, loadingTaskActivity, onSuccessfulPostRunnable).execute();
 	}
 	
 	private class GetAccessTokenTask extends AuthTask<Object, Object, Object> {
@@ -115,8 +115,8 @@ public class SocialTwitter {
 		String requestVerifier;
 		Runnable onSuccessfulTweetRunnable;
 		
-		public GetAccessTokenTask(String requestToken, String requestVerifier, LoadingTaskActivity activity, Runnable onSuccessfulPost) {
-			super(activity);
+		public GetAccessTokenTask(String requestToken, String requestVerifier, Activity loadingTaskActivity, Runnable onSuccessfulPost) {
+			super(loadingTaskActivity);
 			this.requestToken = requestToken;
 			this.requestVerifier = requestVerifier;
 			this.onSuccessfulTweetRunnable = onSuccessfulPost;
