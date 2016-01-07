@@ -2,30 +2,17 @@ package org.aosutils.android.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 
 public class ViewUtils {
-	@SuppressLint("NewApi")
-	private static class Lollipop {
-		private static Lollipop _lollipop;
-		
-		private static Lollipop getInstance() {
-			if (_lollipop == null) {
-				_lollipop = new Lollipop();
-			}
-			
-			return _lollipop;
-		}
-		
-		private Drawable getDrawable(int resourceId, Context context) {
-			return context.getDrawable(resourceId);
-		}
-	}
-	
 	@SuppressLint("NewApi")
 	private static class Jellybean {
 		private static Jellybean _jellybean;
@@ -37,7 +24,7 @@ public class ViewUtils {
 			
 			return _jellybean;
 		}
-		
+
 		public void setBackground(Drawable drawable, View view) {
 			view.setBackground(drawable);
 		}
@@ -46,17 +33,7 @@ public class ViewUtils {
 			observer.removeOnGlobalLayoutListener(victim);
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
-	public static Drawable getDrawable(int resourceId, Context context) {
-		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP) {
-			return context.getResources().getDrawable(resourceId);
-		}
-		else {
-			return Lollipop.getInstance().getDrawable(resourceId, context);
-		}		
-	}
-	
+
 	@SuppressWarnings("deprecation")
 	public static void setBackground(Drawable drawable, View view) {
 		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.JELLY_BEAN) {
@@ -64,7 +41,14 @@ public class ViewUtils {
 		}
 		else {
 			Jellybean.getInstance().setBackground(drawable, view);
-		}		
+		}
+	}
+
+	public static Drawable getTintedDrawable(Context context, @DrawableRes int drawableResId, @ColorRes int colorResId) {
+		Drawable drawable = ContextCompat.getDrawable(context, drawableResId);
+		int color = ContextCompat.getColor(context, colorResId);
+		drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+		return drawable;
 	}
 	
 	@SuppressLint("NewApi")
