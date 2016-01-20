@@ -45,7 +45,7 @@ public class ViewUtils {
 	}
 
 	public static Drawable getTintedDrawable(Context context, @DrawableRes int drawableResId, @ColorRes int colorResId) {
-		Drawable drawable = ContextCompat.getDrawable(context, drawableResId);
+		Drawable drawable = ContextCompat.getDrawable(context, drawableResId).mutate();
 		int color = ContextCompat.getColor(context, colorResId);
 		drawable.setColorFilter(color, PorterDuff.Mode.SRC_IN);
 		return drawable;
