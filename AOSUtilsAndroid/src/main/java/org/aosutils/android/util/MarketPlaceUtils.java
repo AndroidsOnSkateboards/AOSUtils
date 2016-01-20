@@ -1,4 +1,4 @@
-package org.aosutils.android.utils;
+package org.aosutils.android.util;
 
 import android.annotation.TargetApi;
 import android.content.Context;

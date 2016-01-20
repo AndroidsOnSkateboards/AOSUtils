@@ -1,4 +1,4 @@
-package org.aosutils.android.utils;
+package org.aosutils.android.util;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

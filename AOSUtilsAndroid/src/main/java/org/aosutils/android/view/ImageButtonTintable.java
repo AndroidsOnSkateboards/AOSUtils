@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.widget.ImageButton;
 
 import org.aosutils.android.R;
-import org.aosutils.android.utils.ViewUtils;
+import org.aosutils.android.util.ViewUtils;
 
 public class ImageButtonTintable extends ImageButton {
     Integer tintColor;
