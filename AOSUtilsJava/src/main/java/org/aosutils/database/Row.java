@@ -200,6 +200,11 @@ public abstract class Row {
 		return rs.wasNull() ? null : result;
 	}
 	
+	protected Double getDoubleOrNull(ResultSet rs, String columnName) throws SQLException {
+		Double result = rs.getDouble(columnName);
+		return rs.wasNull() ? null : result;
+	}
+	
 	protected boolean nullSafeEquals(Object a, Object b) {
 		if (a == null && b == null) {
 			return true;
