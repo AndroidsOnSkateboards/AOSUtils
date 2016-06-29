@@ -171,7 +171,7 @@ public class YtApiSignature {
 		else {
 			regex = document.contains("function " + functionName)
 					? "function " + Pattern.quote(functionName) + "\\(.+?\\)\\{(.+?)\\}"
-					: "[, ]" + Pattern.quote(functionName) + "=function\\(.*?\\)\\{(.*?)\\}";
+					: "[, \\n]" + Pattern.quote(functionName) + "=function\\(.*?\\)\\{(.*?)\\}";
 		}
 
 		Matcher matcher = Pattern.compile(regex, Pattern.DOTALL).matcher(document);
