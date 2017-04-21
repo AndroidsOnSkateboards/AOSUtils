@@ -89,6 +89,9 @@ public class YtApiSignature {
 			if (path.startsWith("//")) {
 				path = "http:" + path;
 			}
+			else if (path.startsWith("/")) {
+				path = "http://" + _YtApiConstants.YOUTUBE_DOMAIN + path;
+			}
 
 			Html5PlayerInfo playerInfo = new Html5PlayerInfo();
 			playerInfo.version = playerVersion;
@@ -106,13 +109,22 @@ public class YtApiSignature {
 	}
 		
 	private static String getAlgorithmFromHtml5PlayerJsSrc(String jsSrc) throws IOException {
-		// Find "C" in this: var A = B.sig || C (B.s), this will be the name of the signature swapping algorithm function
 		String c = null;
-		{
-			String regex = "var [^;]+=[^;]+.sig\\|\\|(.+?)\\([^;]+\\)";
-			Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
-			if (matcher.find()) {
-				c = matcher.group(1);
+
+		String[] regexs = new String[] {
+				// Find "C" in this: "var A=B.sig||C(B.s)"; this will be the name of the signature swapping algorithm function
+				"var [^;]+=[^;]+.sig\\|\\|(.+?)\\([^;]+\\)",
+
+				// Find "C" in this: "A.set("signature",C(d));"; this will be the name of the signature swapping algorithm function
+				"[^;]+\\.set\\(\"signature\",(.+?)\\([^;]+\\)\\)\\;"
+		};
+
+		for (String regex : regexs) {
+			if (c == null) {
+				Matcher matcher = Pattern.compile(regex).matcher(jsSrc);
+				if (matcher.find()) {
+					c = matcher.group(1);
+				}
 			}
 		}
 
