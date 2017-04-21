@@ -4,18 +4,18 @@ package org.aosutils.android.youtube;
  * YouTube Data API v3
  */
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+import android.net.Uri;
+import android.net.Uri.Builder;
+import android.text.TextUtils;
 
 import org.aosutils.net.HttpUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.net.Uri;
-import android.net.Uri.Builder;
-import android.text.TextUtils;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 
 public class YtApiClientV3 {
@@ -70,7 +70,7 @@ public class YtApiClientV3 {
 	public static SearchResultPlaylists searchYtPlaylists(String query, int maxResults, String pageToken, String apiKey) throws IOException, JSONException {
 		SearchResultIds searchResult = searchYtIds(query, "playlist", maxResults, pageToken, apiKey);
 	
-		ArrayList<YtPlaylist> videos = new ArrayList<YtPlaylist>();
+		ArrayList<YtPlaylist> videos = new ArrayList<>();
 		if (searchResult.ids != null && searchResult.ids.size() > 0) {
 			videos.addAll(getPlaylistInfo(searchResult.ids, apiKey));
 		}
@@ -81,7 +81,7 @@ public class YtApiClientV3 {
 	public static SearchResultVideos searchYtVideos(String query, int maxResults, String pageToken, String apiKey) throws IOException, JSONException {
 		SearchResultIds searchResult = searchYtIds(query, "video", maxResults, pageToken, apiKey);
 	
-		ArrayList<YtVideo> videos = new ArrayList<YtVideo>();
+		ArrayList<YtVideo> videos = new ArrayList<>();
 		if (searchResult.ids != null && searchResult.ids.size() > 0) {
 			videos.addAll(getVideoInfo(searchResult.ids, apiKey));
 		}
@@ -92,7 +92,7 @@ public class YtApiClientV3 {
 	public static SearchResultVideos getPlaylistItems(String playlistId, int maxResults, String pageToken, String apiKey) throws IOException, JSONException {
 		SearchResultIds searchResult = playlistVideoIds(playlistId, maxResults, pageToken, apiKey);
 	
-		ArrayList<YtVideo> videos = new ArrayList<YtVideo>();
+		ArrayList<YtVideo> videos = new ArrayList<>();
 		if (searchResult.ids != null && searchResult.ids.size() > 0) {
 			videos.addAll(getVideoInfo(searchResult.ids, apiKey));
 		}
@@ -101,7 +101,7 @@ public class YtApiClientV3 {
 	}
 	
 	private static SearchResultIds searchYtIds(String query, String type, int maxResults, String pageToken, String apiKey) throws IOException, JSONException {
-		ArrayList<String> ids = new ArrayList<String>();
+		ArrayList<String> ids = new ArrayList<>();
 		
 		Builder uriBuilder = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/youtube/v3/search")
 				.appendQueryParameter("key", apiKey)
@@ -139,7 +139,7 @@ public class YtApiClientV3 {
 	}
 	
 	private static SearchResultIds playlistVideoIds(String playlistId, int maxResults, String pageToken, String apiKey) throws IOException, JSONException {
-		ArrayList<String> ids = new ArrayList<String>();
+		ArrayList<String> ids = new ArrayList<>();
 		
 		Builder uriBuilder = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/youtube/v3/playlistItems")
 				.appendQueryParameter("key", apiKey)
@@ -173,14 +173,14 @@ public class YtApiClientV3 {
 	}
 	
 	public static YtPlaylist getPlaylistInfo(String playlistId, String apiKey) throws IOException, JSONException {
-		ArrayList<String> playlistIds = new ArrayList<String>();
+		ArrayList<String> playlistIds = new ArrayList<>();
     	playlistIds.add(playlistId);
     	ArrayList<YtPlaylist> playlistInfos = getPlaylistInfo(playlistIds, apiKey);
     	return playlistInfos.size() == 0 ? null : playlistInfos.get(0);
 	}
 	
 	public static ArrayList<YtPlaylist> getPlaylistInfo(Collection<String> playlistIds, String apiKey) throws IOException, JSONException {
-		ArrayList<YtPlaylist> playlists = new ArrayList<YtPlaylist>();
+		ArrayList<YtPlaylist> playlists = new ArrayList<>();
 		
 		String uri = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/youtube/v3/playlists")
 				.appendQueryParameter("key", apiKey)
@@ -206,14 +206,14 @@ public class YtApiClientV3 {
 	}
 	
 	public static YtVideo getVideoInfo(String videoId, String apiKey) throws IOException, JSONException {
-		ArrayList<String> videoIds = new ArrayList<String>();
+		ArrayList<String> videoIds = new ArrayList<>();
     	videoIds.add(videoId);
     	ArrayList<YtVideo> videoInfos = getVideoInfo(videoIds, apiKey);
     	return videoInfos.size() == 0 ? null : videoInfos.get(0);
 	}
 	
 	public static ArrayList<YtVideo> getVideoInfo(Collection<String> videoIds, String apiKey) throws IOException, JSONException {
-		ArrayList<YtVideo> videos = new ArrayList<YtVideo>();
+		ArrayList<YtVideo> videos = new ArrayList<>();
 		
 		String uri = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/youtube/v3/videos")
 				.appendQueryParameter("key", apiKey)

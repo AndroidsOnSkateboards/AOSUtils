@@ -4,12 +4,6 @@ package org.aosutils.android.youtube;
  * YouTube Data API v2
  */
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.aosutils.net.HttpUtils;
 import org.aosutils.net.XmlUtils;
 import org.w3c.dom.Document;
@@ -17,6 +11,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 public class YtApiClientV2 {	
 	/*
@@ -75,7 +75,7 @@ public class YtApiClientV2 {
 	}
 	
 	private static ArrayList<YtPlaylist> parsePlaylists(NodeList entries) {
-		ArrayList<YtPlaylist> ytPlaylists = new ArrayList<YtPlaylist>();
+		ArrayList<YtPlaylist> ytPlaylists = new ArrayList<>();
 		
 		for (int i=0; i<entries.getLength(); i++) {
 			Element entry = (Element) entries.item(i);
@@ -96,7 +96,7 @@ public class YtApiClientV2 {
 	}
 	
 	private static ArrayList<YtVideo> parseVideos(NodeList entries) {
-		ArrayList<YtVideo> videos = new ArrayList<YtVideo>();
+		ArrayList<YtVideo> videos = new ArrayList<>();
 		
 		for (int i=0; i<entries.getLength(); i++) {
 			try {
