@@ -11,9 +11,7 @@ import org.aosutils.android.R;
 import org.aosutils.net.HttpStatusCodeException;
 import org.aosutils.net.HttpUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -54,7 +52,7 @@ public class YtApiStreams {
 		public Exception desktopSiteException;
 	}
 	
-	public static StreamResult findStream(String videoId, Context context, StreamType streamType) throws FileNotFoundException, MalformedURLException, IOException {
+	public static StreamResult findStream(String videoId, Context context, StreamType streamType) throws IOException {
 		String[] recommendedFormats = getRecommendedFormats(context, streamType);
 		StreamResult streamResult = findRecommendedUrl(videoId, recommendedFormats, context);
 		return streamResult;
@@ -167,7 +165,7 @@ public class YtApiStreams {
 		}
 	}
 	
-	private static StreamResult findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws FileNotFoundException, MalformedURLException, IOException {
+	private static StreamResult findRecommendedUrl(String videoId, String[] recommendedFormats, Context context) throws IOException {
 		StreamResult streamResult = new StreamResult();
 		
 		HashMap<String, String> urls = new HashMap<>();
@@ -203,9 +201,9 @@ public class YtApiStreams {
 	
 	// HTTP rarely works; Sometimes it takes a few retries. YouTube is shutting it down..
 	// HTTPS is recommended, although Android 3.1 and below's MediaPlayer can't stream HTTPS URL's. 
-	public static String getDesktopSite(String videoId, boolean useHttpsRecommended) throws FileNotFoundException, MalformedURLException, IOException {
+	public static String getDesktopSite(String videoId, boolean useHttpsRecommended) throws IOException {
 		String protocol = useHttpsRecommended ? "https" : "http";
-		String url = protocol + "://www.youtube.com/watch?v=" + videoId;
+		String url = protocol + "://" + _YtApiConstants.YOUTUBE_DOMAIN + "/watch?v=" + videoId;
 		HashMap<String, String> headers = new HashMap<>();
 		// -- Previously: With this header, even on an HTTP->HTTPS redirects with a "Referer" header, the streams would still come back as HTTPS (and not work on older devices), so best to leave it out
 		// -- LATEST UPDATE: This header seems to be required, otherwise http URL's are returned - and they do not work
@@ -261,7 +259,7 @@ public class YtApiStreams {
 		throw exception;
 	}
 	
-	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
+	private static HashMap<String, String> getFormatsFromDesktopSite(String videoId, Context context) throws IOException {
 		String page;
 		if (mediaPlayerSupportsHttps()) {
 			page = getDesktopSite(videoId, true);
@@ -306,7 +304,7 @@ public class YtApiStreams {
 		return formats;
 	}
 	
-	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId, Context context) throws FileNotFoundException, MalformedURLException, IOException {
+	private static HashMap<String, String> getFormatsFromVideoInformation(String videoId, Context context) throws IOException {
 		String uri = "http://www.youtube.com/get_video_info?video_id=" + videoId + "&el=vevo";
 		String page = HttpUtils.get(uri, null, _YtApiConstants.HTTP_TIMEOUT);
 		
@@ -401,7 +399,7 @@ public class YtApiStreams {
 		}
 	}
 	
-	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws FileNotFoundException, MalformedURLException, IOException {
+	private static HashMap<String, String> parseUrls(String urlEncodedFmtStreamMap, String algorithm) throws IOException {
 		HashMap<String, String> formats = new HashMap<>();
 			
 		String[] urls = TextUtils.split(urlEncodedFmtStreamMap, ",");

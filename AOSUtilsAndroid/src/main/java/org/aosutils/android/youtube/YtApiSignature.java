@@ -6,9 +6,7 @@ import org.aosutils.AOSConstants;
 import org.aosutils.StringUtils;
 import org.aosutils.net.HttpUtils;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -26,11 +24,11 @@ public class YtApiSignature {
 		String url;
 	}
 	
-	public static String requestCurrentAlgorithm() throws FileNotFoundException, MalformedURLException, IOException {
+	public static String requestCurrentAlgorithm() throws IOException {
 		HashMap<String, String> headers = new HashMap<>();
 		headers.put("User-Agent", AOSConstants.USER_AGENT_DESKTOP);
 		
-		String homepage = HttpUtils.get("http://www.youtube.com", headers, _YtApiConstants.HTTP_TIMEOUT);
+		String homepage = HttpUtils.get("http://" + _YtApiConstants.YOUTUBE_DOMAIN, headers, _YtApiConstants.HTTP_TIMEOUT);
 		
 		return requestCurrentAlgorithm(homepage);
 	}
