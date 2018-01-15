@@ -1,9 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.aosutils.android"
     >
-    
-    <activity
-		android:name="org.aosutils.android.OAuthLoginActivity"
-		android:theme="@style/Theme.Dialog" />
+
+	<application>
+		<activity
+			android:name="org.aosutils.android.OAuthLoginActivity"
+			android:theme="@style/Theme.Dialog" />
+	</application>
 
 </manifest>
