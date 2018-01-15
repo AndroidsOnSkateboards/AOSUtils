@@ -4,7 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.aosutils.IoUtils;
@@ -60,5 +62,39 @@ public class JsonUtils {
 			return jsonObject;
 		}
 		else return object == null ? "" : object.toString();
+	}
+	
+	public static Object toJavaObject(JSONObject jsonObject) throws JSONException {
+		return toJavaObject((Object)jsonObject);
+	}
+	
+	private static Object toJavaObject(Object object) throws JSONException {
+		if (object instanceof JSONObject) {
+			HashMap<String, Object> javaObject = new HashMap<>();
+			
+			JSONObject jsonObject = (JSONObject) object;
+			JSONArray names = jsonObject.names();
+			for (int i=0; i<names.length(); i++) {
+				String key = names.getString(i);
+				Object value = jsonObject.get(key);
+				javaObject.put(key, toJavaObject(value));
+			}
+			
+			return javaObject;
+		}
+		else if (object instanceof JSONArray) {
+			ArrayList<Object> javaObject = new ArrayList<>();
+			
+			JSONArray jsonArray = (JSONArray) object;
+			for (int i=0; i<jsonArray.length(); i++) {
+				Object value = jsonArray.get(i);
+				javaObject.add(toJavaObject(value));
+			}
+			
+			return javaObject;
+		}
+		else {
+			return object;
+		}
 	}
 }
