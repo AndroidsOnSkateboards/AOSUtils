@@ -41,7 +41,7 @@ public class Column {
 			type.equals(Boolean.class) ? "BOOLEAN" :
 			type.equals(Float.class) || type.equals(Double.class) ? "DOUBLE" :
 			type.equals(Date.class) ? "DATETIME" :
-			"VARCHAR";
+			"VARCHAR(50)";
 		
 		this.type = type == Integer.class ? Types.INTEGER :
 			type.equals(Long.class) || type.equals(BigInteger.class) ? Types.BIGINT :
